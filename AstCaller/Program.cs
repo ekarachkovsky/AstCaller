@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Serilog;
+using Serilog.Events;
 
 namespace AstCaller
 {
@@ -21,12 +23,21 @@ namespace AstCaller
                                 .AddJsonFile("appsettings.json", optional: false)
                                 .Build();
 
+                    Log.Logger = new LoggerConfiguration()
+                        .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+                        .ReadFrom.Configuration(config)
+                        .Enrich.FromLogContext()
+                        .WriteTo.Console()
+                        .WriteTo.File("logs/system_.log", rollingInterval: RollingInterval.Day, buffered: true)
+                        .CreateLogger();
+
                     if (!context.HostingEnvironment.IsDevelopment())
                     {
                         options.Listen(System.Net.IPAddress.Loopback, config.GetValue<int>("Host:Port"));
                     }
                 })
-                .UseStartup<Startup>();
+                .UseStartup<Startup>()
+                .UseSerilog();
 
             return webHost;
         }

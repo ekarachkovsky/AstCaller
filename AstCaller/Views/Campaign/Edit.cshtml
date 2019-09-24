@@ -1,0 +1,44 @@
+﻿@model AstCaller.ViewModels.CampaignViewModel
+
+@{
+    ViewData["Title"] = "Кампания";
+}
+
+<h1>Edit</h1>
+
+<h4>CampaignViewModel</h4>
+<span class="text-danger">@ViewBag.Error</span>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit" enctype="multipart/form-data">
+            <input asp-for="Id" class="form-control" />
+            <div class="form-group">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="AbonentsFile" class="control-label"></label>
+                <input asp-for="AbonentsFile" accept=".txt" class="form-control" />
+                <span asp-validation-for="AbonentsFile" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="VoiceFile" class="control-label"></label>
+                <input asp-for="VoiceFile" accept=".wav,.mp3" class="form-control" />
+                <span asp-validation-for="VoiceFile" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

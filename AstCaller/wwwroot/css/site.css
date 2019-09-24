@@ -54,3 +54,15 @@ body {
   height: 60px;
   line-height: 60px; /* Vertically center the text there */
 }
+
+.table-paginated {
+    height: 100%;
+}
+
+.table-paginated tbody {
+    overflow: scroll;
+}
+
+.oi {
+    color: #535353;
+}

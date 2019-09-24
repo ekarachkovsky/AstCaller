@@ -1,0 +1,31 @@
+﻿@model IEnumerable<AstCaller.ViewModels.CampaignViewModel>
+
+@foreach (var entity in Model)
+{
+    <tr data-pages-count="@ViewBag.TotalPages">
+        <td>
+            @entity.Name
+        </td>
+        <td>
+            @entity.Status.ToString()
+        </td>
+        <td>
+            @entity.AbonentsTotal / @entity.AbonentsProcessed
+        </td>
+        <td>
+            <audio controls="" preload="none">
+                <source src="@Url.Action("Download", new { campaignId=entity.Id, fileType=AstCaller.ViewModels.FileType.Voice })">
+                Your browser does not support the audio element.
+            </audio>
+        </td>
+        <td>
+            <a href="@Url.Action("Download",new { campaignId=entity.Id, AstCaller.ViewModels.FileType.Abonents })">@entity.AbonentsFileName</a>
+        </td>
+        <td>
+            @if (entity.Status == AstCaller.ViewModels.CampaignViewModel.CampaignStatuses.Created) {
+            <a href="@Url.Action("Delete", new { id = entity.Id })"><span class="oi oi-trash"></span></a>
+            <a href="@Url.Action("Edit", new { id=entity.Id })"><span class="oi oi-pencil"></span></a>
+            }
+        </td>
+    </tr>
+}

@@ -1,33 +1,32 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using AstCaller.Classes;
-using AstCaller.DataLayer;
 using AstCaller.Models.Domain;
 using AstCaller.Services;
 using AstCaller.ViewModels;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace AstCaller.Controllers
 {
     public class CampaignController : BaseAuthorizedController
     {
-        private readonly ICampaignRepository _campaignRepository;
+        private readonly MainContext _context;
         private readonly string _uploadsDir;
         private readonly IAbonentsFileService _abonentsFileService;
 
-        public CampaignController(ICampaignRepository campaignRepository,
+        public CampaignController(MainContext context,
             IAbonentsFileService abonentsFileService,
             IHostingEnvironment hostingEnvironment,
             ILogger<CampaignController> logger,
             IUserProvider userProvider) : base(logger, userProvider)
         {
-            _campaignRepository = campaignRepository;
+            _context = context;
             _uploadsDir = Path.Combine(Directory.GetParent(hostingEnvironment.WebRootPath).FullName, "uploads");
             _abonentsFileService = abonentsFileService;
         }
@@ -43,7 +42,7 @@ namespace AstCaller.Controllers
         {
             if (id.HasValue)
             {
-                var entity = await _campaignRepository.GetAsync(id.Value);
+                var entity = await _context.Campaigns.FirstOrDefaultAsync(x => x.Id == id);
                 return View(new CampaignViewModel
                 {
                     Id = entity.Id,
@@ -80,33 +79,31 @@ namespace AstCaller.Controllers
 
             try
             {
-                var entity = new Campaign
-                {
-                    Id = model.Id ?? 0,
-                    Name = model.Name,
-                    Modified = DateTime.Now,
-                    ModifierId = _currentUserId ?? 0
-                };
+                var entity = await GetOrCreateEntity(model.Id);
 
-                var id = await _campaignRepository.SaveAsync(entity);
-                model.Id = id;
+                entity.Name = model.Name;
+                entity.Modified = DateTime.Now;
+                entity.ModifierId = _currentUserId ?? 0;
+
+                if (!model.Id.HasValue)
+                {
+                    await _context.SaveChangesAsync();
+                    model.Id = entity.Id;
+                }
+
                 if (model.AbonentsFile != null)
                 {
-                    await SaveFile(model.AbonentsFile, FileType.Abonents.ToFileName(id));
+                    await SaveFile(model.AbonentsFile, FileType.Abonents.ToFileName(entity.Id));
+                    entity.AbonentsCount = await _abonentsFileService.ProcessFileAsync(Path.Combine(_uploadsDir, $"{entity.Id}_abonents"), entity.Id);
+                    entity.AbonentsFileName = model.AbonentsFile.FileName;
                 }
                 if (model.VoiceFile != null)
                 {
-                    await SaveFile(model.VoiceFile, FileType.Voice.ToFileName(id));
+                    await SaveFile(model.VoiceFile, FileType.Voice.ToFileName(entity.Id));
+                    entity.VoiceFileName = model.VoiceFile.FileName;
                 }
 
-                var count = await _abonentsFileService.ProcessFileAsync(Path.Combine(_uploadsDir, $"{id}_abonents"), id);
-
-                if (count > 0)
-                {
-                    entity.Id = id;
-                    entity.AbonentsCount = count;
-                    await _campaignRepository.SaveAsync(entity);
-                }
+                await _context.SaveChangesAsync();
             }
             catch (Exception ex)
             {
@@ -118,16 +115,30 @@ namespace AstCaller.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        private async Task<Campaign> GetOrCreateEntity(int? id)
+        {
+            if (id > 0)
+            {
+                return await _context.Campaigns.FirstAsync(x => x.Id == id);
+            }
+
+            var entity = new Campaign();
+            _context.Campaigns.Add(entity);
+            return entity;
+        }
+
         [HttpGet]
         public async Task<IActionResult> Delete(int id)
         {
-            var entity = await _campaignRepository.GetAsync(id);
+            var entity = await _context.Campaigns.FirstAsync(x=>x.Id==id);
             if (entity.Status != (int)CampaignViewModel.CampaignStatuses.Created)
             {
                 throw new Exception("Невозможно удалить кампанию обзвона, которая была запущена ранее");
             }
 
-            await _campaignRepository.DeleteAsync(id);
+            _context.Campaigns.Remove(entity);
+
+            await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
         }
@@ -135,14 +146,32 @@ namespace AstCaller.Controllers
         [HttpGet]
         public async Task<IActionResult> LoadData(int page = 1)
         {
-            var countTask = _campaignRepository.TotalCount();
+            var countTask = _context.Campaigns.CountAsync();
             page--;
             if (page < 0)
             {
                 page = 0;
             }
 
-            var data = await _campaignRepository.GetRange<CampaignViewModel>(page * 20, 20, "vcampaigns");
+            var abonents = _context.CampaignAbonents;
+
+            var query = _context.Campaigns.Select(x => new CampaignViewModel
+            {
+                Id=x.Id,
+                AbonentsFileName = x.AbonentsFileName,
+                AbonentsTotal = x.AbonentsCount,
+                Name = x.Name,
+                Status = (CampaignViewModel.CampaignStatuses)x.Status,
+                VoiceFileName = x.VoiceFileName,
+                AbonentsProcessed = abonents.Count(ca=>ca.CampaignId ==x.Id),
+                Modified = x.Modified
+            });
+            var data = await query
+                .OrderByDescending(x=>x.Modified)
+                .Skip(page * 20)
+                .Take(20)
+                .ToArrayAsync();
+
             var count = await countTask;
             ViewBag.TotalPages = (int)Math.Ceiling((decimal)count / 20);
 
@@ -155,7 +184,7 @@ namespace AstCaller.Controllers
             try
             {
                 var fileName = fileType.ToFileName(campaignId);
-                var campaignEntityTask = _campaignRepository.GetAsync(campaignId);
+                var campaignEntityTask = _context.Campaigns.FirstAsync(x => x.Id == campaignId);
 
                 using (var memory = new MemoryStream())
                 {
@@ -168,7 +197,7 @@ namespace AstCaller.Controllers
                     return File(memory.ToArray(), "APPLICATION/octet-stream", campaignEntity.GetFileName(fileType));
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, $"Cannot download file {fileType.ToString()} for campaign {campaignId}");
                 throw;

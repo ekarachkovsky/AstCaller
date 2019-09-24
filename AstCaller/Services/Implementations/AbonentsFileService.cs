@@ -1,38 +1,42 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using AstCaller.DataLayer;
 using AstCaller.Models.Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace AstCaller.Services.Implementations
 {
     public class AbonentsFileService : IAbonentsFileService
     {
-        private readonly ICampaignAbonentRepository _campaignAbonentRepository;
+        private readonly MainContext _context;
         private readonly IUserProvider _userProvider;
 
-        public AbonentsFileService(ICampaignAbonentRepository campaignAbonentRepository, IUserProvider userProvider)
+        public AbonentsFileService(MainContext context, IUserProvider userProvider)
         {
-            _campaignAbonentRepository = campaignAbonentRepository;
+            _context = context;
             _userProvider = userProvider;
         }
 
         public async Task<int> ProcessFileAsync(string fileLocation, int campaignId)
         {
             var linesCount = 0;
+            _context.CampaignAbonents.RemoveRange(await _context.CampaignAbonents.Where(x => x.CampaignId == campaignId).ToArrayAsync());
             using (var reader = new StreamReader(File.OpenRead(fileLocation)))
             {
                 while (reader.Peek() >= 0)
                 {
                     linesCount++;
-                    await ProcessLineAsync(await reader.ReadLineAsync(), campaignId);
+                    ProcessLine(await reader.ReadLineAsync(), campaignId);
                 }
             }
+            await _context.SaveChangesAsync();
 
             return linesCount;
         }
 
-        private async Task ProcessLineAsync(string line, int campaignId)
+        private void ProcessLine(string line, int campaignId)
         {
             var entity = new CampaignAbonent
             {
@@ -43,7 +47,7 @@ namespace AstCaller.Services.Implementations
                 Modified = DateTime.Now
             };
 
-            await _campaignAbonentRepository.SaveAsync(entity);
+            _context.CampaignAbonents.Add(entity);
         }
     }
 }

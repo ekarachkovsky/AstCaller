@@ -1,9 +1,7 @@
-﻿using System;
-using AstCaller.Classes;
-using AstCaller.DataLayer;
-using AstCaller.DataLayer.Implementations;
+﻿using AstCaller.Classes;
 using AstCaller.DataLayer.Stores;
 using AstCaller.Models;
+using AstCaller.Models.Domain;
 using AstCaller.Services;
 using AstCaller.Services.Implementations;
 using Microsoft.AspNetCore.Builder;
@@ -11,9 +9,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace AstCaller
 {
@@ -22,9 +20,6 @@ namespace AstCaller
         public Startup(IConfiguration configuration, IHostingEnvironment env)
         {
             Configuration = configuration;
-            var configWriter = new ConfigurationWriter(env);
-
-            new DatabaseGenerator(configuration, configWriter).Run();
         }
 
         public IConfiguration Configuration { get; }
@@ -88,10 +83,9 @@ namespace AstCaller
 
         private void RegisterServices(IServiceCollection services)
         {
-            services.AddSingleton<ISqlConnectionProvider, MySqlConnectionProvider>()
-                .AddTransient<IUserRepository, UserRepository>()
-                .AddTransient<ICampaignRepository,CampaignRepository>()
-                .AddTransient<ICampaignAbonentRepository,CampaignAbonentRepository>()
+            services
+                .AddDbContext<MainContext>(options =>
+                        options.UseMySQL(Configuration.GetConnectionString("DefaultConnection")))
                 .AddTransient<IAbonentsFileService,AbonentsFileService>()
                 .AddTransient<IUserProvider,UserProvider>()
                 .AddSingleton<IUserStore<UserModel>, UserStore>()

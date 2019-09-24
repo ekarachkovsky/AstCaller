@@ -1,18 +1,21 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AstCaller.Models;
+using AstCaller.Models.Domain;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace AstCaller.DataLayer.Stores
 {
     public class UserStore : IUserStore<UserModel>, IUserPasswordStore<UserModel>
     {
-        private readonly IUserRepository _userRepository;
+        private readonly MainContext _context;
 
-        public UserStore(IUserRepository userRepository)
+        public UserStore(MainContext context)
         {
-            _userRepository = userRepository;
+            _context = context;
         }
 
         public Task<IdentityResult> CreateAsync(UserModel user, CancellationToken cancellationToken)
@@ -38,14 +41,14 @@ namespace AstCaller.DataLayer.Stores
                 throw new ArgumentException(nameof(userId));
             }
 
-            var user = await _userRepository.GetAsync(id);
+            var user = await _context.Users.FirstOrDefaultAsync(x=>x.Id==id);
 
             return new UserModel
             {
                 Id = user.Id,
                 Fullname = user.Fullname,
                 Login = user.Login,
-                Name = user.Name,
+                Name = user.Fullname,
                 Password = user.Password
             };
         }
@@ -59,14 +62,14 @@ namespace AstCaller.DataLayer.Stores
                 throw new ArgumentNullException(nameof(normalizedUserName));
             }
 
-            var user = await _userRepository.GetByLogin(normalizedUserName);
+            var user = await _context.Users.FirstOrDefaultAsync(x=>x.Login == normalizedUserName);
 
             return new UserModel
             {
                 Id = user.Id,
                 Fullname = user.Fullname,
                 Login = user.Login,
-                Name = user.Name,
+                Name = user.Fullname,
                 Password = user.Password
             };
         }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace AstCaller.Models.Domain
 {
@@ -17,5 +19,9 @@ namespace AstCaller.Models.Domain
         public int ModifierId { get; set; }
         
         public DateTime Modified { get; set; }
+
+        public User Modifier { get; set; }
+
+        public IEnumerable<CampaignAbonent> CampaignAbonents { get; set; }
     }
 }

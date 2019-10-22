@@ -1,4 +1,6 @@
-﻿namespace AstCaller.Models.Domain
+﻿using System.Collections.Generic;
+
+namespace AstCaller.Models.Domain
 {
     public class User : BaseModel
     {
@@ -7,5 +9,9 @@
         public string Login { get; set; }
 
         public string Password { get; set; }
+
+        public IEnumerable<Campaign> Campaigns { get; set; }
+
+        public IEnumerable<CampaignAbonent> CampaignAbonents { get; set; }
     }
 }

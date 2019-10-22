@@ -1,4 +1,6 @@
-﻿using AstCaller.Classes;
+﻿using System;
+using System.Linq;
+using AstCaller.Classes;
 using AstCaller.DataLayer.Stores;
 using AstCaller.Models;
 using AstCaller.Models.Domain;
@@ -17,7 +19,7 @@ namespace AstCaller
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration, IHostingEnvironment env)
+        public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
@@ -67,6 +69,8 @@ namespace AstCaller
                 app.UseHsts();
             }
 
+            ConfigureDatabase(app);
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseCookiePolicy();
@@ -81,11 +85,41 @@ namespace AstCaller
             });
         }
 
+        private void ConfigureDatabase(IApplicationBuilder app)
+        {
+           if (Configuration.GetValue<bool>("Db:FastStart"))
+            {
+                return;
+            }
+            using (var serviceScope = app.ApplicationServices
+            .GetRequiredService<IServiceScopeFactory>()
+            .CreateScope())
+            {
+                using (var context = serviceScope.ServiceProvider.GetService<MainContext>())
+                {
+                    context.Database.Migrate();
+                    //context.Users.Add
+                    if (!context.Users.Any())
+                    {
+                        /*context.Users.Add(new User
+                        {
+                            Login="admin",
+                            Password = 
+                        })*/
+
+                        var service = new SeedDatabase(context);
+
+                        service.CreateAdminUser();
+                    }
+                }
+            }
+        }
+
         private void RegisterServices(IServiceCollection services)
         {
             services
                 .AddDbContext<MainContext>(options =>
-                        options.UseMySQL(Configuration.GetConnectionString("DefaultConnection")))
+                        options.UseMySql(Configuration.GetConnectionString("DefaultConnection")))
                 .AddTransient<IAbonentsFileService,AbonentsFileService>()
                 .AddTransient<IUserProvider,UserProvider>()
                 .AddSingleton<IUserStore<UserModel>, UserStore>()

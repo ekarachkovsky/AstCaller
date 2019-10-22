@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore;
+﻿using AstCaller.Models.Domain;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using Serilog.Events;

@@ -130,7 +130,7 @@ namespace AstCaller.Controllers
         [HttpGet]
         public async Task<IActionResult> Delete(int id)
         {
-            var entity = await _context.Campaigns.FirstAsync(x=>x.Id==id);
+            var entity = await _context.Campaigns.FirstAsync(x => x.Id == id);
             if (entity.Status != (int)CampaignViewModel.CampaignStatuses.Created)
             {
                 throw new Exception("Невозможно удалить кампанию обзвона, которая была запущена ранее");
@@ -157,17 +157,17 @@ namespace AstCaller.Controllers
 
             var query = _context.Campaigns.Select(x => new CampaignViewModel
             {
-                Id=x.Id,
+                Id = x.Id,
                 AbonentsFileName = x.AbonentsFileName,
                 AbonentsTotal = x.AbonentsCount,
                 Name = x.Name,
                 Status = (CampaignViewModel.CampaignStatuses)x.Status,
                 VoiceFileName = x.VoiceFileName,
-                AbonentsProcessed = abonents.Count(ca=>ca.CampaignId ==x.Id),
+                AbonentsProcessed = abonents.Count(ca => ca.CampaignId == x.Id),
                 Modified = x.Modified
             });
             var data = await query
-                .OrderByDescending(x=>x.Modified)
+                .OrderByDescending(x => x.Modified)
                 .Skip(page * 20)
                 .Take(20)
                 .ToArrayAsync();
@@ -202,6 +202,59 @@ namespace AstCaller.Controllers
                 _logger.LogError(ex, $"Cannot download file {fileType.ToString()} for campaign {campaignId}");
                 throw;
             }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Start(int id)
+        {
+            var campaignEntity = await _context.Campaigns.FirstAsync(x => x.Id == id);
+
+            if (campaignEntity.Status == (int)CampaignViewModel.CampaignStatuses.Finished)
+            {
+                var errorText = $"Cannot start already finished campaign {id}, {campaignEntity.Name}";
+                _logger.LogError(errorText);
+                throw new Exception(errorText);
+            }
+
+            if (campaignEntity.Status == (int)CampaignViewModel.CampaignStatuses.Running)
+            {
+                return new JsonResult(new { success = true });
+            }
+
+            campaignEntity.Status = (int)CampaignViewModel.CampaignStatuses.Running;
+            _context.SaveChanges();
+
+            return new JsonResult(new { success = true });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Stop(int id)
+        {
+            var campaignEntity = await _context.Campaigns.FirstAsync(x => x.Id == id);
+
+            if (campaignEntity.Status == (int)CampaignViewModel.CampaignStatuses.Created)
+            {
+                var errorText = $"Cannot stop campaign that was not started yet {id}, {campaignEntity.Name}";
+                _logger.LogError(errorText);
+                throw new Exception(errorText);
+            }
+
+            if (campaignEntity.Status == (int)CampaignViewModel.CampaignStatuses.Cancelled || campaignEntity.Status == (int)CampaignViewModel.CampaignStatuses.Finished)
+            {
+                var errorText = $"Cannot stop cancelled or finished campaign {id}, {campaignEntity.Name}";
+                _logger.LogError(errorText);
+                throw new Exception(errorText);
+            }
+
+            if (campaignEntity.Status == (int)CampaignViewModel.CampaignStatuses.Stopped)
+            {
+                return new JsonResult(new { success = true });
+            }
+
+            campaignEntity.Status = (int)CampaignViewModel.CampaignStatuses.Stopped;
+            _context.SaveChanges();
+
+            return new JsonResult(new { success = true });
         }
 
         private async Task SaveFile(IFormFile file, string saveName)

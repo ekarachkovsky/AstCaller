@@ -2,14 +2,14 @@
 @{
     ViewData["Title"] = "Кампании обзвона";
 }
-<a class="btn btn-info" href="@Url.Action("Edit")">Добавить новую</a>
-<table class="table table-striped table-paginated" data-datasource="@Url.Action("LoadData")" data-initial-page="@ViewBag.Page">
+<a class="btn btn-info" href="@Url.Action("Edit")">Добавить</a>
+<table id="campaignsTable" class="table table-striped table-paginated" data-datasource="@Url.Action("LoadData")" data-initial-page="@ViewBag.Page">
     <thead>
         <tr>
             <th>
                 Наименование кампании
             </th>
-            <th>
+            <th style="width: 140px;">
                 Статус
             </th>
             <th>
@@ -29,9 +29,45 @@
     <tbody>
     </tbody>
 </table>
-<a class="btn btn-info" href="@Url.Action("Edit")">Добавить новую</a>
+<a class="btn btn-info" href="@Url.Action("Edit")">Добавить</a>
 
 @section Scripts {
     <script src="~/js/paginatedtable.js"></script>
+    <script>
+        (function campaignsEventHandler() {
+            function startCampaign(row, target) {
+                $.get('Campaign/Start/' + row.data('rowid'), function () {
+                    target.removeClass('oi-media-play');
+                    target.addClass('oi-media-pause');
+                    target.prop('title', 'Остановить обзвон');
+                    $('.campaign-status', row).html('Запущен');
+                }).fail(function () {
+                        alert('Не удалось запустить кампанию обзвона');
+                    })
+            }
+
+            function stopCampaign(row, target) {
+                $.get('Campaign/Stop/' + row.data('rowid'), function () {
+                    target.removeClass('oi-media-pause');
+                    target.removeClass('oi-media-stop');
+                    target.addClass('oi-media-play');
+                    target.prop('title', 'Запустить обзвон');
+                    $('.campaign-status', row).html('Остановлен');
+                }).fail(function () {
+                    alert('Не удалось остановить кампанию обзвона');
+                });
+            }
+
+            $("#campaignsTable").click(function (event) {
+                var target = $(event.target);
+                if (target.hasClass("oi-media-play")) {
+                    startCampaign(target.closest('tr'), target);
+                }
+                if (target.hasClass('oi-media-stop') || target.hasClass('oi-media-pause')) {
+                    stopCampaign(target.closest('tr'), target);
+                }
+            });
+        })();
+    </script>
 }
 

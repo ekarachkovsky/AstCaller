@@ -27,7 +27,12 @@ namespace AstCaller.ViewModels
             /// <summary>
             /// Campaign was cancelled
             /// </summary>
-            Cancelled
+            Cancelled,
+
+            /// <summary>
+            /// Campaign has been finished
+            /// </summary>
+            Finished
         }
 
         [HiddenInput]

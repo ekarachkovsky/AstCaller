@@ -2,12 +2,28 @@
 
 @foreach (var entity in Model)
 {
-    <tr data-pages-count="@ViewBag.TotalPages">
+    <tr data-pages-count="@ViewBag.TotalPages" data-rowid="@(entity.Id)">
         <td>
             @entity.Name
         </td>
         <td>
-            @entity.Status.ToString()
+            @if (entity.Status == AstCaller.ViewModels.CampaignViewModel.CampaignStatuses.Running)
+            {
+                <span class="oi oi-media-pause" title="Остановить обзвон"></span><span class="campaign-status">Запущен</span>
+            }
+            else if (entity.Status == AstCaller.ViewModels.CampaignViewModel.CampaignStatuses.Created ||
+                entity.Status == AstCaller.ViewModels.CampaignViewModel.CampaignStatuses.Stopped)
+            {
+                <span class="oi oi-media-play" title="Запустить обзвон"></span><span class="campaign-status">Остановлен</span>
+            }
+            else if (entity.Status == AstCaller.ViewModels.CampaignViewModel.CampaignStatuses.Cancelled)
+            {
+                <span class="campaign-status">Отменен</span>
+            }
+            else
+            {
+                <span class="campaign-status">Завершен</span>
+            }
         </td>
         <td>
             @entity.AbonentsTotal / @entity.AbonentsProcessed

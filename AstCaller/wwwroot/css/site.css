@@ -66,3 +66,21 @@ body {
 .oi {
     color: #535353;
 }
+
+.oi-media-play {
+    color: #4cc12d;
+    cursor:pointer;
+}
+.oi-media-play:hover {
+    color: #35eb05;
+}
+.oi-media-pause{
+    color: #808080;
+}
+    .oi-media-pause:hover {
+        color: #535353;
+        cursor: pointer;
+    }
+    .campaign-status {
+        margin-left: 5px;
+    }

@@ -17,5 +17,9 @@ namespace AstCaller.Models.Domain
         public User Modifier { get; set; }
 
         public Campaign Campaign { get; set; }
+
+        public Guid UniqueId { get; set; }
+
+        public int Status { get; set; }
     }
 }

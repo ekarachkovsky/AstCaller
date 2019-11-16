@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace AstCaller.Controllers
@@ -19,16 +20,19 @@ namespace AstCaller.Controllers
         private readonly MainContext _context;
         private readonly string _uploadsDir;
         private readonly IAbonentsFileService _abonentsFileService;
+        private readonly IConfiguration _configuration;
 
         public CampaignController(MainContext context,
             IAbonentsFileService abonentsFileService,
             IHostingEnvironment hostingEnvironment,
             ILogger<CampaignController> logger,
-            IUserProvider userProvider) : base(logger, userProvider)
+            IUserProvider userProvider,
+            IConfiguration configuration) : base(logger, userProvider)
         {
             _context = context;
             _uploadsDir = Path.Combine(Directory.GetParent(hostingEnvironment.WebRootPath).FullName, "uploads");
             _abonentsFileService = abonentsFileService;
+            _configuration = configuration;
         }
 
         public IActionResult Index(int page = 0)
@@ -99,8 +103,10 @@ namespace AstCaller.Controllers
                 }
                 if (model.VoiceFile != null)
                 {
-                    await SaveFile(model.VoiceFile, FileType.Voice.ToFileName(entity.Id));
+                    var voiceFileName = FileType.Voice.ToFileName(entity.Id);
+                    await SaveFile(model.VoiceFile, voiceFileName);
                     entity.VoiceFileName = model.VoiceFile.FileName;
+                    System.IO.File.Copy(Path.Combine(_uploadsDir, voiceFileName), Path.Combine(_configuration.GetValue<string>("Asterisk:Sounds"), voiceFileName));
                 }
 
                 await _context.SaveChangesAsync();

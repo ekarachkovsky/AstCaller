@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 
 namespace AstCaller
 {
@@ -120,16 +121,23 @@ namespace AstCaller
             services
                 .AddDbContext<MainContext>(options =>
                         options.UseMySql(Configuration.GetConnectionString("DefaultConnection")))
-                .AddTransient<IAbonentsFileService,AbonentsFileService>()
-                .AddTransient<IUserProvider,UserProvider>()
+                .AddTransient<IAbonentsFileService, AbonentsFileService>()
+                .AddTransient<IUserProvider, UserProvider>()
                 .AddSingleton<IUserStore<UserModel>, UserStore>()
                 .AddSingleton<UserRoleStore>()
                 .AddSingleton<IHttpContextAccessor, HttpContextAccessor>()
-                /*.AddLogging(loggingBuilder =>
-                {
-                    loggingBuilder.AddConsole();
-                    loggingBuilder.AddDebug();
-                })*/;
+                .AddTransient<IContextProvider, ContextProvider>()
+                .AddTransient<IScheduleService, ScheduleService>()
+                .AddTransient<IScheduledServiceProcessorFactory, ScheduledServiceProcessorFactory>()
+                
+                .AddSingleton<Microsoft.Extensions.Hosting.IHostedService, BackgroundWorker>()
+                .AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true))
+            /*.AddLogging(loggingBuilder =>
+            {
+                loggingBuilder.AddConsole();
+                loggingBuilder.AddDebug();
+            })*/
+            ;
         }
     }
 }

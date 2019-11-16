@@ -44,7 +44,8 @@ namespace AstCaller.Services.Implementations
                 Phone = line,
                 HasErrors = !long.TryParse(line, out _),
                 ModifierId = _userProvider.Id,
-                Modified = DateTime.Now
+                Modified = DateTime.Now,
+                UniqueId = Guid.NewGuid()
             };
 
             _context.CampaignAbonents.Add(entity);

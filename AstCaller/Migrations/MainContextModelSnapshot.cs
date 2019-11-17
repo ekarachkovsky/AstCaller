@@ -51,6 +51,8 @@ namespace AstCaller.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<string>("CallInfo");
+
                     b.Property<int>("CampaignId");
 
                     b.Property<bool>("HasErrors");
@@ -62,6 +64,10 @@ namespace AstCaller.Migrations
                     b.Property<string>("Phone")
                         .HasColumnType("varchar(500)");
 
+                    b.Property<int>("Status");
+
+                    b.Property<Guid>("UniqueId");
+
                     b.HasKey("Id")
                         .HasName("pk_campaignabonent");
 
@@ -70,6 +76,35 @@ namespace AstCaller.Migrations
                     b.HasIndex("ModifierId");
 
                     b.ToTable("campaignabonent");
+                });
+
+            modelBuilder.Entity("AstCaller.Models.Domain.CampaignSchedule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<int>("CampaignId");
+
+                    b.Property<DateTime>("DateEnd");
+
+                    b.Property<DateTime>("DateStart");
+
+                    b.Property<int>("DaysOfWeek");
+
+                    b.Property<int>("ModifierId");
+
+                    b.Property<int>("TimeEnd");
+
+                    b.Property<int>("TimeStart");
+
+                    b.HasKey("Id")
+                        .HasName("pk_campaignschedule");
+
+                    b.HasIndex("CampaignId");
+
+                    b.HasIndex("ModifierId");
+
+                    b.ToTable("campaignschedule");
                 });
 
             modelBuilder.Entity("AstCaller.Models.Domain.User", b =>
@@ -113,6 +148,21 @@ namespace AstCaller.Migrations
                         .WithMany("CampaignAbonents")
                         .HasForeignKey("ModifierId")
                         .HasConstraintName("fk_campaignabonent_modifier");
+                });
+
+            modelBuilder.Entity("AstCaller.Models.Domain.CampaignSchedule", b =>
+                {
+                    b.HasOne("AstCaller.Models.Domain.Campaign", "Campaign")
+                        .WithMany("CampaignSchedules")
+                        .HasForeignKey("CampaignId")
+                        .HasConstraintName("fk_campaignschedule_campaign")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("AstCaller.Models.Domain.User", "Modifier")
+                        .WithMany("CampaignSchedules")
+                        .HasForeignKey("ModifierId")
+                        .HasConstraintName("fk_campaignschedule_modifier")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618
         }

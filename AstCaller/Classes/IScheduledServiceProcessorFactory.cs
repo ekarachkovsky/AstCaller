@@ -9,6 +9,6 @@ namespace AstCaller.Classes
 {
     public interface IScheduledServiceProcessorFactory
     {
-        IScheduledProcessorService Build(ScheduleTaskModel schedule);
+        IScheduledProcessorService Build(ScheduleTaskModel schedule, Models.Domain.MainContext context);
     }
 }

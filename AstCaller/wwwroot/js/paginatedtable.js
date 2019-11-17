@@ -53,7 +53,7 @@
 
                         me.pagesRendered = true;
                     }
-
+                    $(".popover-handler").popover({ html: true });
                     me.reloadPageLinksState();
                 } else {
                     me.tbodyRef.html('<tr><td class="grayed">Нет данных</td></tr>');

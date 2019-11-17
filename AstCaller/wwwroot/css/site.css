@@ -2,66 +2,69 @@
 for details on configuring this project to bundle and minify static web assets. */
 
 a.navbar-brand {
-  white-space: normal;
-  text-align: center;
-  word-break: break-all;
+    white-space: normal;
+    text-align: center;
+    word-break: break-all;
 }
 
 /* Sticky footer styles
 -------------------------------------------------- */
 html {
-  font-size: 14px;
+    font-size: 14px;
 }
+
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
 .border-top {
-  border-top: 1px solid #e5e5e5;
+    border-top: 1px solid #e5e5e5;
 }
+
 .border-bottom {
-  border-bottom: 1px solid #e5e5e5;
+    border-bottom: 1px solid #e5e5e5;
 }
 
 .box-shadow {
-  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+    box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
 }
 
 button.accept-policy {
-  font-size: 1rem;
-  line-height: inherit;
+    font-size: 1rem;
+    line-height: inherit;
 }
 
 /* Sticky footer styles
 -------------------------------------------------- */
 html {
-  position: relative;
-  min-height: 100%;
+    position: relative;
+    min-height: 100%;
 }
 
 body {
-  /* Margin bottom by footer height */
-  margin-bottom: 60px;
+    /* Margin bottom by footer height */
+    margin-bottom: 60px;
 }
+
 .footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  white-space: nowrap;
-  /* Set the fixed height of the footer here */
-  height: 60px;
-  line-height: 60px; /* Vertically center the text there */
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    white-space: nowrap;
+    /* Set the fixed height of the footer here */
+    height: 60px;
+    line-height: 60px; /* Vertically center the text there */
 }
 
 .table-paginated {
     height: 100%;
 }
 
-.table-paginated tbody {
-    overflow: scroll;
-}
+    .table-paginated tbody {
+        overflow: scroll;
+    }
 
 .oi {
     color: #535353;
@@ -69,18 +72,51 @@ body {
 
 .oi-media-play {
     color: #4cc12d;
-    cursor:pointer;
+    cursor: pointer;
 }
-.oi-media-play:hover {
-    color: #35eb05;
-}
-.oi-media-pause{
+
+    .oi-media-play:hover {
+        color: #35eb05;
+    }
+
+.oi-media-pause {
     color: #808080;
 }
-    .oi-media-pause:hover {
-        color: #535353;
-        cursor: pointer;
+
+.oi-media-pause:hover {
+    color: #535353;
+    cursor: pointer;
+}
+
+.campaign-status {
+    margin-left: 5px;
+}
+
+.scheduleWeekDaySelector {
+    font-size: 12px;
+}
+
+.scheduleWeekDaySelector td {
+    border: none;
+    padding: 0px 6px;
+}
+
+.schedule-table tr>td:first-child {
+    width: 130px;
+}
+
+.weekdays {
+
+}
+
+    .weekdays i, .weekdays b {
+        width: 15px;
+        height: 10px;
+        border: 1px solid #666;
+        margin-right: 1px;
+        display: inline-block;
     }
-    .campaign-status {
-        margin-left: 5px;
-    }
+
+.weekdays b {
+    background-color: #666;
+}

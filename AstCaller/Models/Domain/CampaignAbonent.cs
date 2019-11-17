@@ -21,5 +21,7 @@ namespace AstCaller.Models.Domain
         public Guid UniqueId { get; set; }
 
         public int Status { get; set; }
+
+        public string CallInfo { get; set; }
     }
 }

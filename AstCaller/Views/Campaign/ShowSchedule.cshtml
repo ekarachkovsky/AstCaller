@@ -1,0 +1,19 @@
+﻿@model IEnumerable<AstCaller.ViewModels.CampaignScheduleViewModel>
+
+@foreach (var item in Model) {
+    <div>
+        <strong>Дата с:</strong>&nbsp;@item.DateStart.ToString("dd.MM.yyyy")<br />
+        <strong>Дата по:</strong>&nbsp;@item.DateEnd.ToString("dd.MM.yyyy")<br />
+        <strong>Дни недели:</strong>&nbsp;<div class='weekdays'>
+    @Html.Raw((item.DaysOfWeek & 2) > 0 ? "<b></b>" : "<i></i>")
+    @Html.Raw((item.DaysOfWeek & 4) > 0 ? "<b></b>" : "<i></i>")
+    @Html.Raw((item.DaysOfWeek & 8) > 0 ? "<b></b>" : "<i></i>")
+    @Html.Raw((item.DaysOfWeek & 16) > 0 ? "<b></b>" : "<i></i>")
+    @Html.Raw((item.DaysOfWeek & 32) > 0 ? "<b></b>" : "<i></i>")
+    @Html.Raw((item.DaysOfWeek & 64) > 0 ? "<b></b>" : "<i></i>")
+    @Html.Raw((item.DaysOfWeek & 1) > 0 ? "<b></b>" : "<i></i>")
+</div>
+        <strong>Время начала:</strong>&nbsp;@item.TimeStart<br />
+        <strong>Время окончания:</strong>&nbsp;@item.TimeEnd
+    </div>
+}

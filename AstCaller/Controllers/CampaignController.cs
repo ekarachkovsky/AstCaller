@@ -47,17 +47,60 @@ namespace AstCaller.Controllers
             if (id.HasValue)
             {
                 var entity = await _context.Campaigns.FirstOrDefaultAsync(x => x.Id == id);
+                if (entity == null)
+                {
+                    throw new NullReferenceException($"Campaign with id={id} does not exists");
+                }
+
+                var schedules = await _context.CampaignSchedules.Where(x => x.CampaignId == id).ToArrayAsync();
+                if (schedules.Length == 0)
+                {
+                    schedules = new CampaignSchedule[] { new CampaignSchedule {
+                        DateStart = DateTime.Today,
+                        DateEnd = DateTime.Today,
+                        TimeStart = 480,
+                        TimeEnd = 1260,
+                        DaysOfWeek = 127
+                    } };
+                }
+
                 return View(new CampaignViewModel
                 {
                     Id = entity.Id,
                     Name = entity.Name,
                     AbonentsTotal = entity.AbonentsCount,
                     AbonentsFileName = entity.AbonentsFileName,
-                    VoiceFileName = entity.VoiceFileName
+                    VoiceFileName = entity.VoiceFileName,
+                    Schedules = schedules.Select(x => new CampaignScheduleViewModel
+                    {
+                        DateStart = x.DateStart,
+                        DateEnd = x.DateEnd,
+                        TimeStart = TimeToString(x.TimeStart),
+                        TimeEnd = TimeToString(x.TimeEnd),
+                        DaysOfWeek = x.DaysOfWeek
+                    })
                 });
             }
 
-            return View();
+            return View(new CampaignViewModel
+            {
+                Schedules = new CampaignScheduleViewModel[]
+                {
+                    new CampaignScheduleViewModel
+                    {
+                        DateStart = DateTime.Today,
+                        DateEnd = DateTime.Today,
+                        TimeStart = "8:00",
+                        TimeEnd = "21:00",
+                        DaysOfWeek = 127
+                    }
+                }
+            });
+        }
+
+        private string TimeToString(int time)
+        {
+            return $"{time / 60}:{time % 60:00}";
         }
 
         [HttpPost]
@@ -73,6 +116,11 @@ namespace AstCaller.Controllers
                 if (model.VoiceFile == null)
                 {
                     ModelState.AddModelError(nameof(model.VoiceFile), "Для запуска обзвона необходима запись голосового сообщения");
+                }
+
+                if (model.Schedules == null || model.Schedules.Count() == 0)
+                {
+                    ModelState.AddModelError(nameof(model.Schedules), "Для запуска обзвона необходимо добавить расписание");
                 }
             }
 
@@ -95,12 +143,44 @@ namespace AstCaller.Controllers
                     model.Id = entity.Id;
                 }
 
+                var schedules = await _context.CampaignSchedules.Where(x => x.CampaignId == entity.Id).ToArrayAsync();
+
+                var toRemove = schedules.Where(x => !model.Schedules.Any(s => s.Id == x.Id));
+                if (toRemove.Any())
+                {
+                    foreach (var schedule in toRemove)
+                    {
+                        _context.RemoveRange(toRemove);
+                    }
+                }
+
+                foreach (var schedule in model.Schedules)
+                {
+                    var scEntity = schedules.FirstOrDefault(x => x.Id == schedule.Id);
+                    if (scEntity == null)
+                    {
+                        scEntity = new CampaignSchedule
+                        {
+                            CampaignId = entity.Id
+                        };
+                        _context.CampaignSchedules.Add(scEntity);
+                    }
+
+                    scEntity.ModifierId = _currentUserId.Value;
+                    scEntity.DateStart = schedule.DateStart;
+                    scEntity.DateEnd = schedule.DateEnd;
+                    scEntity.DaysOfWeek = schedule.DaysOfWeek;
+                    scEntity.TimeStart = TimeFromString(schedule.TimeStart);
+                    scEntity.TimeEnd = TimeFromString(schedule.TimeEnd);
+                }
+
                 if (model.AbonentsFile != null)
                 {
                     await SaveFile(model.AbonentsFile, FileType.Abonents.ToFileName(entity.Id));
                     entity.AbonentsCount = await _abonentsFileService.ProcessFileAsync(Path.Combine(_uploadsDir, $"{entity.Id}_abonents"), entity.Id);
                     entity.AbonentsFileName = model.AbonentsFile.FileName;
                 }
+
                 if (model.VoiceFile != null)
                 {
                     var voiceFileName = FileType.Voice.ToFileName(entity.Id);
@@ -119,6 +199,34 @@ namespace AstCaller.Controllers
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        private int TimeFromString(string time)
+        {
+            var parts = time.Split(":");
+
+            var hours = int.Parse(parts[0]);
+            var minutes = int.Parse(parts[1]);
+            return hours * 60 + minutes;
+        }
+
+        private bool[] DaysOfWeekToArray(int daysOfWeek)
+        {
+            return new bool[]
+            {
+                (daysOfWeek & 1) == 1,
+                (daysOfWeek & 2) == 2,
+                (daysOfWeek & 3) == 3,
+                (daysOfWeek & 4) == 4,
+                (daysOfWeek & 5) == 5,
+                (daysOfWeek & 6) == 6,
+                (daysOfWeek & 7) == 7,
+            };
+        }
+
+        private int DaysOfWeekFromArray(bool[] daysOfWeek)
+        {
+            return daysOfWeek.Select((val, ind) => val ? (ind + 1) : 0).Sum();
         }
 
         private async Task<Campaign> GetOrCreateEntity(int? id)
@@ -177,6 +285,18 @@ namespace AstCaller.Controllers
                 .Skip(page * 20)
                 .Take(20)
                 .ToArrayAsync();
+
+            var campaignIds = data.Select(x => x.Id).ToArray();
+
+            var schedules = await _context.CampaignSchedules.Where(x => campaignIds.Contains(x.CampaignId)).ToArrayAsync();
+            Array.ForEach(data, x => x.Schedules = schedules.Select(s => new CampaignScheduleViewModel
+            {
+                DateEnd = s.DateEnd,
+                DateStart = s.DateStart,
+                DaysOfWeek = s.DaysOfWeek,
+                TimeEnd = TimeToString(s.TimeEnd),
+                TimeStart = TimeToString(s.TimeStart)
+            }).ToArray());
 
             var count = await countTask;
             ViewBag.TotalPages = (int)Math.Ceiling((decimal)count / 20);

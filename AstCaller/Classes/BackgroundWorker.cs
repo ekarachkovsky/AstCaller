@@ -1,4 +1,7 @@
-﻿using AstCaller.Services;
+﻿using AstCaller.Models.Domain;
+using AstCaller.Services;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
@@ -13,16 +16,16 @@ namespace AstCaller.Classes
     public class BackgroundWorker : BackgroundService
     {
         private readonly ILogger<BackgroundWorker> _logger;
-        private readonly IScheduleService _scheduleService;
         private readonly IScheduledServiceProcessorFactory _serviceFactory;
+        private readonly IServiceProvider _serviceProvider;
 
         public BackgroundWorker(ILogger<BackgroundWorker> logger,
-            IScheduleService scheduleService,
-            IScheduledServiceProcessorFactory scheduledServiceProcessorFactory)
+            IScheduledServiceProcessorFactory scheduledServiceProcessorFactory,
+            IServiceProvider serviceProvider)
         {
             _logger = logger;
-            _scheduleService = scheduleService;
             _serviceFactory = scheduledServiceProcessorFactory;
+            _serviceProvider = serviceProvider;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -33,16 +36,25 @@ namespace AstCaller.Classes
             {
                 try
                 {
-                    var schedules = await _scheduleService.GetCurrentSchedulesAsync();
-                    foreach (var schedule in schedules)
+                    using (var scope = _serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope())
+                    using (var context = scope.ServiceProvider.GetRequiredService<MainContext>())
                     {
-                        var service = _serviceFactory.Build(schedule);
-                        await service.ExecuteAsync();
+                        var scheduleService = scope.ServiceProvider.GetRequiredService<IScheduleService>();
+                        var schedules = await scheduleService.GetCurrentSchedulesAsync();
+                        foreach (var schedule in schedules)
+                        {
+                            var service = _serviceFactory.Build(schedule, context);
+                            await service.ExecuteAsync();
+                        }
+
+                        var callFinalizer = scope.ServiceProvider.GetRequiredService<ICallFinalizer>();
+                        await callFinalizer.ExecuteAsync();
+                        await callFinalizer.CleanupAsync();
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex,"Background Worker exception");
+                    _logger.LogError(ex, "Background Worker exception");
                 }
 
                 await Task.Delay(1000, stoppingToken);

@@ -13,6 +13,8 @@ namespace AstCaller.Models.Domain
         public DbSet<Campaign> Campaigns { get; set; }
         public DbSet<CampaignAbonent> CampaignAbonents { get; set; }
 
+        public DbSet<CampaignSchedule> CampaignSchedules { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -47,10 +49,29 @@ namespace AstCaller.Models.Domain
                 entity.Property(p => p.HasErrors);
                 entity.HasOne(p => p.Campaign)
                     .WithMany(c => c.CampaignAbonents)
+                    .HasForeignKey(c=>c.CampaignId)
                     .HasConstraintName("fk_campaignabonent_campaign");
                 entity.HasOne(p => p.Modifier)
                     .WithMany(u => u.CampaignAbonents)
+                    .HasForeignKey(p => p.ModifierId)
                     .HasConstraintName("fk_campaignabonent_modifier");
+            });
+
+            modelBuilder.Entity<CampaignSchedule>(entity =>
+            {
+                entity.ToTable("campaignschedule");
+                entity.HasKey(e => e.Id)
+                    .HasName("pk_campaignschedule");
+
+                entity.HasOne(p => p.Campaign)
+                    .WithMany(c => c.CampaignSchedules)
+                    .HasForeignKey(c => c.CampaignId)
+                    .HasConstraintName("fk_campaignschedule_campaign");
+
+                entity.HasOne(p => p.Modifier)
+                    .WithMany(u => u.CampaignSchedules)
+                    .HasForeignKey(c=>c.ModifierId)
+                    .HasConstraintName("fk_campaignschedule_modifier");
             });
         }
     }

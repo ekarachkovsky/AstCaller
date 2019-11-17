@@ -3,7 +3,7 @@
 @foreach (var entity in Model)
 {
     <tr data-pages-count="@ViewBag.TotalPages" data-rowid="@(entity.Id)">
-        <td>
+        <td class="popover-handler" data-trigger="hover" data-original-title="Расписание" data-content="@(await Html.PartialAsync("ShowSchedule", entity.Schedules))">
             @entity.Name
         </td>
         <td>

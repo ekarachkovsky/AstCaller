@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace AstCaller.ViewModels
@@ -60,5 +61,7 @@ namespace AstCaller.ViewModels
         [Display(Name = "Голосовая запись")]
         public IFormFile VoiceFile { get; set; }
         public DateTime Modified { get; set; }
+
+        public IEnumerable<CampaignScheduleViewModel> Schedules { get; set; }
     }
 }

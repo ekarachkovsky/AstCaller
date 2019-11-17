@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AstCaller.Classes;
 using AstCaller.Models;
+using AstCaller.Models.Domain;
 using AstCaller.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -15,16 +16,16 @@ namespace AstCaller.Services.Implementations
     public class ScheduledProcessorService : IScheduledProcessorService
     {
         private readonly ILogger<ScheduledProcessorService> _logger;
-        private IContextProvider _contextProvider;
-        private ScheduleTaskModel _schedule;
+        private readonly MainContext _context;
+        private readonly ScheduleTaskModel _schedule;
         private readonly IConfiguration _configuration;
         private readonly int _lineLimit;
         private readonly string _trunkName;
 
-        public ScheduledProcessorService(ILogger<ScheduledProcessorService> logger, IContextProvider contextProvider, IConfiguration configuration, ScheduleTaskModel schedule)
+        public ScheduledProcessorService(ILogger<ScheduledProcessorService> logger, MainContext context, IConfiguration configuration, ScheduleTaskModel schedule)
         {
             _logger = logger;
-            _contextProvider = contextProvider;
+            _context = context;
             _schedule = schedule;
             _configuration = configuration;
             _lineLimit = _configuration.GetValue<int>("Asterisk:LinesLimit");
@@ -33,8 +34,9 @@ namespace AstCaller.Services.Implementations
 
         public async Task ExecuteAsync()
         {
-            await ProcessFinishedCallsAsync();
             var callsInProcess = CallsInProcess();
+            _logger.LogInformation($"ScheduleProcessor({_schedule.CampaignId}) Current calls count: {callsInProcess}, limit: {_lineLimit}");
+
             if (callsInProcess > _lineLimit / 2)
             {
                 return;
@@ -50,12 +52,20 @@ namespace AstCaller.Services.Implementations
             foreach(var abonent in abonents)
             {
                 await GenerateCallFile(abonent);
+                await UpdateAbonentAsync(abonent);
             }
+        }
+
+        private async Task UpdateAbonentAsync(ScheduleTaskAbonentModel abonent)
+        {
+            var entity = await _context.CampaignAbonents.FirstAsync(x => x.Id == abonent.Id);
+            entity.Status = 1;
+            await _context.SaveChangesAsync();
         }
 
         private async Task GenerateCallFile(ScheduleTaskAbonentModel abonent)
         {
-            var fileName = $"call_{_schedule.CampaignId}_{abonent.UniqueId}.call";
+            var fileName = $"call_{_schedule.CampaignId}_{abonent.Id}_{abonent.UniqueId}.call";
             var tempFile = Path.Combine(_configuration.GetValue<string>("Asterisk:TempDir"), fileName);
             await File.WriteAllTextAsync(tempFile,
                 $"Channel: SIP/{_trunkName}/{abonent.Phone}" + Environment.NewLine +
@@ -77,30 +87,11 @@ Priority: 1
               */
         }
 
-        private async Task ProcessFinishedCallsAsync()
-        {
-            var files = Directory.GetFiles(_configuration.GetValue<string>("Asterisk:FinishedCallFilesDir"));
-            foreach(var file in files)
-            {
-                await ProcessFinishedCallAsync(file);
-            }
-        }
-
-        private async Task ProcessFinishedCallAsync(string file)
-        {
-            var content = await File.ReadAllTextAsync(file);
-
-            //TODO: Do something
-        }
-
         private async Task FinishCampaignAsync()
         {
-            using (var context = _contextProvider.GetContext())
-            {
-                var campaign = await context.Campaigns.FirstAsync(x => x.Id == _schedule.CampaignId);
+                var campaign = await _context.Campaigns.FirstAsync(x => x.Id == _schedule.CampaignId);
                 campaign.Status = (int)CampaignViewModel.CampaignStatuses.Finished;
-                await context.SaveChangesAsync();
-            }
+                await _context.SaveChangesAsync();
         }
 
         private int CallsInProcess()
@@ -110,13 +101,12 @@ Priority: 1
 
         private async Task<IEnumerable<ScheduleTaskAbonentModel>> GetAbonentsAsync(int callsInProcess)
         {
-            using (var context = _contextProvider.GetContext())
-            {
-                var abonents = await context.CampaignAbonents.Where(x => x.CampaignId == _schedule.CampaignId &&
+                var abonents = await _context.CampaignAbonents.Where(x => x.CampaignId == _schedule.CampaignId &&
                         x.Status == 0 &&
                         !x.HasErrors)
                     .Select(x => new ScheduleTaskAbonentModel
                     {
+                        Id = x.Id,
                         Phone = x.Phone,
                         UniqueId = x.UniqueId
                     })
@@ -124,7 +114,6 @@ Priority: 1
                     .ToArrayAsync();
 
                 return abonents;
-            }
         }
     }
 }

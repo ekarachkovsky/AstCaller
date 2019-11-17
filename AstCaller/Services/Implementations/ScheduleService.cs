@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AstCaller.Classes;
 using AstCaller.Models;
 using AstCaller.Models.Domain;
 using AstCaller.ViewModels;
@@ -12,32 +11,33 @@ namespace AstCaller.Services.Implementations
 {
     public class ScheduleService : IScheduleService
     {
-        private readonly IContextProvider _contextProvider;
+        private readonly MainContext _context;
 
-        public ScheduleService(IContextProvider contextProvider)
+        public ScheduleService(MainContext context)
         {
-            _contextProvider = contextProvider;
+            _context = context;
         }
 
         public async Task<IEnumerable<ScheduleTaskModel>> GetCurrentSchedulesAsync()
         {
-            using(var context = _contextProvider.GetContext())
-            {
-                var now = DateTime.Now;
-                var nowTime = now.TimeOfDay.TotalSeconds;
-                var nowDay = (int)Math.Pow(2, (int)now.DayOfWeek);
-                var res = context.Campaigns.Where(x => x.DateStart < now &&
-                                        x.DateEnd > now && 
-                                        x.TimeStart < nowTime &&
-                                        x.TimeEnd > nowTime &&
-                                        (x.DaysOfWeek & nowDay) == 1 &&
-                                        x.Status == (int)CampaignViewModel.CampaignStatuses.Running);
+            var now = DateTime.Now;
+            var nowTime = (int)(now.TimeOfDay.TotalSeconds/60);
+            var nowDay = (int)Math.Pow(2, (int)now.DayOfWeek);
 
-                return await res.Select(x => new ScheduleTaskModel
-                {
-                    CampaignId = x.Id
-                }).ToArrayAsync();
-            }
+            var res = from cmp in _context.Campaigns
+                      join sch in _context.CampaignSchedules on cmp.Id equals sch.CampaignId
+                      where cmp.Status == (int)CampaignViewModel.CampaignStatuses.Running &&
+                            sch.DateStart < now &&
+                            sch.DateEnd > now &&
+                            sch.TimeStart < nowTime &&
+                            sch.TimeEnd > nowTime &&
+                            (sch.DaysOfWeek & nowDay)>0
+                      select new ScheduleTaskModel
+                      {
+                          CampaignId = cmp.Id
+                      };
+
+            return await res.Distinct().ToArrayAsync();
         }
     }
 }

@@ -4,14 +4,11 @@
     ViewData["Title"] = "Кампания";
 }
 
-<h1>Edit</h1>
-
-<h4>CampaignViewModel</h4>
 <span class="text-danger">@ViewBag.Error</span>
 <hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit" enctype="multipart/form-data">
+<form asp-action="Edit" enctype="multipart/form-data">
+    <div class="row">
+        <div class="col-md-4">
             <input asp-for="Id" class="form-control" />
             <div class="form-group">
                 <label asp-for="Name" class="control-label"></label>
@@ -28,17 +25,101 @@
                 <input asp-for="VoiceFile" accept=".wav,.mp3" class="form-control" />
                 <span asp-validation-for="VoiceFile" class="text-danger"></span>
             </div>
+        </div>
+        <div class="col-md-8">
+            <h4>Расписание</h4>
+            <table class="table schedule-table">
+                <thead>
+                    <tr>
+                        <th>Дата начала</th>
+                        <th>Дата окончания</th>
+                        <th>Время начала</th>
+                        <th>Время окончания</th>
+                        <th>Дни недели</th>
+                        <th> </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var scheduleInd = 0;
+                        foreach (var schedule in Model.Schedules)
+                        {
+                            <tr>
+                                <td>
+                                    <input type="hidden" name="Schedules[@scheduleInd][Id]" value="@(schedule.Id)" />
+                                    <input type="text" class="form-control date" name="Schedules[@scheduleInd][DateStart]" value="@(schedule.DateStart.ToString("dd.MM.yyyy"))" />
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control date" name="Schedules[@scheduleInd][DateEnd]" value="@(schedule.DateEnd.ToString("dd.MM.yyyy"))" />
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control" name="Schedules[@scheduleInd][TimeStart]" value="@(schedule.TimeStart)" />
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control" name="Schedules[@scheduleInd][TimeEnd]" value="@(schedule.TimeEnd)" />
+                                </td>
+                                <td>
+                                    <div class="scheduleWeekDaySelector">
+                                        <input type="hidden" name="Schedules[@scheduleInd][DaysOfWeek]" value="@(schedule.DaysOfWeek)" />
+                                        <table>
+                                            <tr>
+                                                <td>Пн</td>
+                                                <td>Вт</td>
+                                                <td>Ср</td>
+                                                <td>Чт</td>
+                                                <td>Пт</td>
+                                                <td>Сб</td>
+                                                <td>Вс</td>
+                                            </tr>
+                                            <tr>
+                                                <td><input type="checkbox" value="2" @Html.Raw((schedule.DaysOfWeek & 2) == 2 ? "checked='checked'" : "") /></td>
+                                                <td><input type="checkbox" value="4" @Html.Raw((schedule.DaysOfWeek & 4) == 4 ? "checked='checked'" : "") /></td>
+                                                <td><input type="checkbox" value="8" @Html.Raw((schedule.DaysOfWeek & 8) == 8 ? "checked='checked'" : "") /></td>
+                                                <td><input type="checkbox" value="16" @Html.Raw((schedule.DaysOfWeek & 16) == 16 ? "checked='checked'" : "") /></td>
+                                                <td><input type="checkbox" value="32" @Html.Raw((schedule.DaysOfWeek & 32) == 32 ? "checked='checked'" : "") /></td>
+                                                <td><input type="checkbox" value="64" @Html.Raw((schedule.DaysOfWeek & 64) == 64 ? "checked='checked'" : "") /></td>
+                                                <td><input type="checkbox" value="1" @Html.Raw((schedule.DaysOfWeek & 1) == 1 ? "checked='checked'" : "") /></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (scheduleInd > 0)
+                                    {
+                                        <button class="btn btn-danger remove"><span class="glyphicon glyphicon-remove"></span></button>
+                                    }
+                                </td>
+                            </tr>
+                            scheduleInd++;
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-4">
             <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+                <a asp-action="Index" class="btn">Отмена</a>
+                <input type="submit" value="Сохранить" class="btn btn-primary" />
             </div>
-        </form>
+        </div>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+</form>
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script type="text/javascript">
+        $('.date').datepicker({
+            language: 'ru',
+            autoclose: true,
+            format: 'dd.mm.yyyy'
+        });
+
+        $('.scheduleWeekDaySelector').click(function (ev) {
+            if (ev.target.type == "checkbox") {
+                var sum = 0;
+                $('input[type=checkbox]:checked', this).each(function () { sum += $(this).val()*1; });
+                $('input[type=hidden]', this).val(sum);
+            }
+        });
+    </script>
 }

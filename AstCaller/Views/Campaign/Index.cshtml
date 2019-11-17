@@ -31,6 +31,7 @@
 </table>
 <a class="btn btn-info" href="@Url.Action("Edit")">Добавить</a>
 
+
 @section Scripts {
     <script src="~/js/paginatedtable.js"></script>
     <script>
@@ -62,9 +63,11 @@
                 var target = $(event.target);
                 if (target.hasClass("oi-media-play")) {
                     startCampaign(target.closest('tr'), target);
+                    return;
                 }
                 if (target.hasClass('oi-media-stop') || target.hasClass('oi-media-pause')) {
                     stopCampaign(target.closest('tr'), target);
+                    return;
                 }
             });
         })();

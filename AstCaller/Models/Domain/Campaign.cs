@@ -23,15 +23,6 @@ namespace AstCaller.Models.Domain
         public User Modifier { get; set; }
 
         public IEnumerable<CampaignAbonent> CampaignAbonents { get; set; }
-
-        public DateTime DateStart { get;  set; }
-
-        public DateTime DateEnd { get;  set; }
-
-        public int TimeStart { get;  set; }
-
-        public int TimeEnd { get;  set; }
-
-        public int DaysOfWeek { get; set; }
+        public IEnumerable<CampaignSchedule> CampaignSchedules { get; set; }
     }
 }

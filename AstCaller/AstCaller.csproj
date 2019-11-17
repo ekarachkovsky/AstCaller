@@ -17,6 +17,10 @@
     <Compile Remove="Migrations\20191019133301_InitialCreate.Designer.cs" />
     <Compile Remove="Migrations\20191019135146_InitialCreate.cs" />
     <Compile Remove="Migrations\20191019135146_InitialCreate.Designer.cs" />
+    <Compile Remove="Migrations\20191117021540_AddTimeConditions.cs" />
+    <Compile Remove="Migrations\20191117021540_AddTimeConditions.Designer.cs" />
+    <Compile Remove="Migrations\20191117063700_MoveTimeConditionsToSchedule.cs" />
+    <Compile Remove="Migrations\20191117063700_MoveTimeConditionsToSchedule.Designer.cs" />
   </ItemGroup>
 
 
@@ -29,7 +33,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.2.3" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.2.4" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.2.6" />
     <PackageReference Include="Serilog.AspNetCore" Version="3.0.0" />

@@ -9,11 +9,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace AstCaller.Controllers
 {
     [Authorize]
-    public class IdentityController : Controller
+    public class AccountController : Controller
     {
         private readonly SignInManager<UserModel> _signInManager;
 
-        public IdentityController(
+        public AccountController(
             SignInManager<UserModel> signInManager)
         {
             _signInManager = signInManager;

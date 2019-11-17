@@ -49,8 +49,8 @@ namespace AstCaller
                          options.Password.RequireUppercase = false;
                      })
                 .AddDefaultTokenProviders()
-            .AddUserStore<UserStore>()
-            .AddRoleStore<UserRoleStore>();
+                .AddUserStore<UserStore>()
+                .AddRoleStore<UserRoleStore>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
@@ -88,7 +88,7 @@ namespace AstCaller
 
         private void ConfigureDatabase(IApplicationBuilder app)
         {
-           if (Configuration.GetValue<bool>("Db:FastStart"))
+            if (Configuration.GetValue<bool>("Db:FastStart"))
             {
                 return;
             }
@@ -99,15 +99,8 @@ namespace AstCaller
                 using (var context = serviceScope.ServiceProvider.GetService<MainContext>())
                 {
                     context.Database.Migrate();
-                    //context.Users.Add
                     if (!context.Users.Any())
                     {
-                        /*context.Users.Add(new User
-                        {
-                            Login="admin",
-                            Password = 
-                        })*/
-
                         var service = new SeedDatabase(context);
 
                         service.CreateAdminUser();
@@ -126,10 +119,9 @@ namespace AstCaller
                 .AddSingleton<IUserStore<UserModel>, UserStore>()
                 .AddSingleton<UserRoleStore>()
                 .AddSingleton<IHttpContextAccessor, HttpContextAccessor>()
-                .AddTransient<IContextProvider, ContextProvider>()
                 .AddTransient<IScheduleService, ScheduleService>()
                 .AddTransient<IScheduledServiceProcessorFactory, ScheduledServiceProcessorFactory>()
-                
+                .AddTransient<ICallFinalizer, CallFinalizer>()
                 .AddSingleton<Microsoft.Extensions.Hosting.IHostedService, BackgroundWorker>()
                 .AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true))
             /*.AddLogging(loggingBuilder =>

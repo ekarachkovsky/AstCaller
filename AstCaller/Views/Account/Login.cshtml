@@ -1,7 +1,7 @@
 ﻿@model AstCaller.ViewModels.LoginViewModel
 
 @{
-    ViewData["Title"] = "Log in";
+    ViewData["Title"] = "Вход";
 }
 
 <h2>@ViewData["Title"].</h2>
@@ -9,8 +9,6 @@
     <div class="col-md-8">
         <section>
             <form asp-controller="Identity" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" class="form-horizontal">
-                <h4>Use a local account to log in.</h4>
-                <hr />
                 <div asp-validation-summary="All" class="text-danger"></div>
                 <div class="form-group">
                     <label asp-for="Login" class="col-md-2 control-label"></label>
@@ -38,12 +36,9 @@
                 </div>
                 <div class="form-group">
                     <div class="col-md-offset-2 col-md-10">
-                        <button type="submit" class="btn btn-default">Log in</button>
+                        <button type="submit" class="btn btn-primary">Вход</button>
                     </div>
                 </div>
-                <p>
-                    <a asp-action="ForgotPassword">Forgot your password?</a>
-                </p>
             </form>
         </section>
     </div>

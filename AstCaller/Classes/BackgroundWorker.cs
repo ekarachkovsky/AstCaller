@@ -57,7 +57,7 @@ namespace AstCaller.Classes
                     _logger.LogError(ex, "Background Worker exception");
                 }
 
-                await Task.Delay(1000, stoppingToken);
+                await Task.Delay(30000, stoppingToken);
             }
         }
     }

@@ -51,9 +51,33 @@ namespace AstCaller.Services.Implementations
 
             foreach(var abonent in abonents)
             {
-                await GenerateCallFile(abonent);
+                if (_schedule.Action == "Play")
+                {
+                    await GeneratePlayCallFile(abonent);
+                }
+                else
+                {
+                    await GenerateExtensionCallFile(abonent);
+                }
+
                 await UpdateAbonentAsync(abonent);
             }
+        }
+
+        private async Task GenerateExtensionCallFile(ScheduleTaskAbonentModel abonent)
+        {
+            var fileName = $"call_{_schedule.CampaignId}_{abonent.Id}_{abonent.UniqueId}.call";
+            var tempFile = Path.Combine(_configuration.GetValue<string>("Asterisk:TempDir"), fileName);
+            await File.WriteAllTextAsync(tempFile,
+                $"Channel: PJSIP/{abonent.Phone}" + Environment.NewLine +
+                "MaxRetries: 3" + Environment.NewLine +
+                $"Context: {_schedule.Action}" + Environment.NewLine +
+                "Extension: s" + Environment.NewLine +
+                "Priority: 1" + Environment.NewLine +
+                $"Set: audiofile={FileType.Voice.ToFileName(_schedule.CampaignId)}" + Environment.NewLine +
+                "Archive: Yes");
+
+            File.Move(tempFile, Path.Combine(_configuration.GetValue<string>("Asterisk:CallFilesDir"), fileName));
         }
 
         private async Task UpdateAbonentAsync(ScheduleTaskAbonentModel abonent)
@@ -63,7 +87,7 @@ namespace AstCaller.Services.Implementations
             await _context.SaveChangesAsync();
         }
 
-        private async Task GenerateCallFile(ScheduleTaskAbonentModel abonent)
+        private async Task GeneratePlayCallFile(ScheduleTaskAbonentModel abonent)
         {
             var fileName = $"call_{_schedule.CampaignId}_{abonent.Id}_{abonent.UniqueId}.call";
             var tempFile = Path.Combine(_configuration.GetValue<string>("Asterisk:TempDir"), fileName);

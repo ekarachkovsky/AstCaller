@@ -1,8 +1,32 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
 }
-
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="row">
+    <div class="col-md-4">
+        <h3>Статистика</h3>
+        <table class="table table-borderless">
+            <tr>
+                <td>Активных кампаний:</td>
+                <td id="campaignsActive">n/a</td>
+            </tr>
+            <tr>
+                <td>Сейчас запущено кампаний:</td>
+                <td id="campaignsRunning">n/a</td>
+            </tr>
+            <tr>
+                <td>Осталось обзвонить абонентов:</td>
+                <td id="abonentsUnprocessed">n/a</td>
+            </tr>
+            <tr>
+                <td>Абонентов в процессе:</td>
+                <td id="abonentsInProcess">n/a</td>
+            </tr>
+        </table>
+    </div>
+    <div class="col-md-8">
+        <h3>Статистика за сегодня</h3>
+        <div id="statsHolder">
+            <div class="text-center" style="min-height: 300px;padding-top: 120px;background-color: #f1f1f1;"><i class="oi oi-ban" style="font-size: 50px;color: #ccc;"></i></div>
+        </div>
+    </div>
 </div>

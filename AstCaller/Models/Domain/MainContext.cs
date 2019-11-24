@@ -12,8 +12,8 @@ namespace AstCaller.Models.Domain
         public DbSet<User> Users { get; set; }
         public DbSet<Campaign> Campaigns { get; set; }
         public DbSet<CampaignAbonent> CampaignAbonents { get; set; }
-
         public DbSet<CampaignSchedule> CampaignSchedules { get; set; }
+        public DbSet<AsteriskExtension> AsteriskExtensions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -72,6 +72,23 @@ namespace AstCaller.Models.Domain
                     .WithMany(u => u.CampaignSchedules)
                     .HasForeignKey(c=>c.ModifierId)
                     .HasConstraintName("fk_campaignschedule_modifier");
+            });
+
+            modelBuilder.Entity<AsteriskExtension>(entity =>
+            {
+                entity.ToTable("asteriskextension");
+                entity.HasKey(e => e.Extension)
+                    .HasName("pk_asteriskextension");
+
+                entity.HasOne(p => p.Modifier)
+                    .WithMany(u => u.AsteriskExtensions)
+                    .HasForeignKey(p => p.ModifierId)
+                    .HasConstraintName("fk_asteriskextension_modifier");
+
+                entity.HasMany(p => p.Campaigns)
+                    .WithOne(p => p.AsteriskExtension)
+                    .HasForeignKey(p => p.Extension)
+                    .HasConstraintName("fk_campaign_extension");
             });
         }
     }

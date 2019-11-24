@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace AstCaller.Controllers
 {
@@ -44,6 +46,12 @@ namespace AstCaller.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int? id = null)
         {
+            ViewBag.AsteriskActions = await _context.AsteriskExtensions.Where(x => !x.Disabled).Select(x => new AsteriskExtensionViewModel
+            {
+                Extension = x.Extension,
+                Title = x.Title
+            }).ToArrayAsync();
+
             if (id.HasValue)
             {
                 var entity = await _context.Campaigns.FirstOrDefaultAsync(x => x.Id == id);
@@ -71,6 +79,8 @@ namespace AstCaller.Controllers
                     AbonentsTotal = entity.AbonentsCount,
                     AbonentsFileName = entity.AbonentsFileName,
                     VoiceFileName = entity.VoiceFileName,
+                    Action = entity.Extension,
+
                     Schedules = schedules.Select(x => new CampaignScheduleViewModel
                     {
                         DateStart = x.DateStart,
@@ -84,6 +94,7 @@ namespace AstCaller.Controllers
 
             return View(new CampaignViewModel
             {
+                Action = "Play",
                 Schedules = new CampaignScheduleViewModel[]
                 {
                     new CampaignScheduleViewModel
@@ -106,6 +117,12 @@ namespace AstCaller.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(CampaignViewModel model)
         {
+            ViewBag.AsteriskActions = await _context.AsteriskExtensions.Where(x => !x.Disabled).Select(x => new AsteriskExtensionViewModel
+            {
+                Extension = x.Extension,
+                Title = x.Title
+            }).ToArrayAsync();
+
             if (!model.Id.HasValue)
             {
                 if (model.AbonentsFile == null)
@@ -126,6 +143,8 @@ namespace AstCaller.Controllers
 
             if (!ModelState.IsValid)
             {
+                ViewBag.Error = "Не удалось сохранить форму, проверьте, заполнены ли все поля";
+                _logger.LogWarning($"Campaign form validation error. Total errors: {ModelState.ErrorCount}, errors: [{string.Join(",", ModelState.Select(x => $"{x.Key}:{x.Value.ValidationState}"))}], model: [{JsonConvert.SerializeObject(model)}]");
                 return View(model);
             }
 
@@ -136,6 +155,7 @@ namespace AstCaller.Controllers
                 entity.Name = model.Name;
                 entity.Modified = DateTime.Now;
                 entity.ModifierId = _currentUserId ?? 0;
+                entity.Extension = model.Action;
 
                 if (!model.Id.HasValue)
                 {
@@ -183,10 +203,17 @@ namespace AstCaller.Controllers
 
                 if (model.VoiceFile != null)
                 {
-                    var voiceFileName = FileType.Voice.ToFileName(entity.Id);
+                    var voiceFileName = FileType.Voice.ToFileName(entity.Id) + Path.GetExtension(model.VoiceFile.FileName);
                     await SaveFile(model.VoiceFile, voiceFileName);
                     entity.VoiceFileName = model.VoiceFile.FileName;
-                    System.IO.File.Copy(Path.Combine(_uploadsDir, voiceFileName), Path.Combine(_configuration.GetValue<string>("Asterisk:Sounds"), voiceFileName));
+                    if (_configuration.GetValue<bool>("Asterisk:UseSox"))
+                    {
+                        Convert(voiceFileName);
+                    }
+                    else
+                    {
+                        System.IO.File.Copy(Path.Combine(_uploadsDir, voiceFileName), Path.Combine(_configuration.GetValue<string>("Asterisk:Sounds"), voiceFileName));
+                    }
                 }
 
                 await _context.SaveChangesAsync();
@@ -199,6 +226,43 @@ namespace AstCaller.Controllers
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        private void Convert(string fileName)
+        {
+            try
+            {
+                var soxExecutable = _configuration.GetValue<string>("Asterisk:SoxPath");
+                if (string.IsNullOrEmpty(soxExecutable))
+                {
+                    soxExecutable = "/bin/sox";
+                }
+
+                var process = new System.Diagnostics.Process
+                {
+                    StartInfo = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = soxExecutable,
+                        Arguments = $"{Path.Combine(_uploadsDir, fileName)} -r 8k -c 1 -b 16 {Path.Combine(_configuration.GetValue<string>("Asterisk:Sounds"), Path.GetFileNameWithoutExtension(fileName))}.wav",
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    }
+                };
+
+                process.Start();
+                string result = process.StandardOutput.ReadToEnd();
+                if (!string.IsNullOrEmpty(result))
+                {
+                    throw new Exception(result);
+                }
+                process.WaitForExit();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error while executing sox convert file {fileName}");
+                throw new Exception($"Не удалось обработать голосовой файл. Файл должен быть в формате wav");
+            }
         }
 
         private int TimeFromString(string time)
@@ -277,7 +341,8 @@ namespace AstCaller.Controllers
                 Name = x.Name,
                 Status = (CampaignViewModel.CampaignStatuses)x.Status,
                 VoiceFileName = x.VoiceFileName,
-                AbonentsProcessed = abonents.Count(ca => ca.CampaignId == x.Id),
+                AbonentsLoaded = abonents.Count(ca => ca.CampaignId == x.Id),
+                AbonentsProcessed = abonents.Count(ca => ca.CampaignId == x.Id && ca.Status != 0),
                 Modified = x.Modified
             });
             var data = await query
@@ -289,7 +354,7 @@ namespace AstCaller.Controllers
             var campaignIds = data.Select(x => x.Id).ToArray();
 
             var schedules = await _context.CampaignSchedules.Where(x => campaignIds.Contains(x.CampaignId)).ToArrayAsync();
-            Array.ForEach(data, x => x.Schedules = schedules.Select(s => new CampaignScheduleViewModel
+            Array.ForEach(data, x => x.Schedules = schedules.Where(s=>s.CampaignId == x.Id).Select(s => new CampaignScheduleViewModel
             {
                 DateEnd = s.DateEnd,
                 DateStart = s.DateStart,

@@ -8,5 +8,6 @@ namespace AstCaller.Models
     public class ScheduleTaskModel
     {
         public int CampaignId { get; set; }
+        public string Action { get; set; }
     }
 }

@@ -63,5 +63,9 @@ namespace AstCaller.ViewModels
         public DateTime Modified { get; set; }
 
         public IEnumerable<CampaignScheduleViewModel> Schedules { get; set; }
+
+        [Display(Name="Действие")]
+        public string Action { get; set; }
+        public int AbonentsLoaded { get; set; }
     }
 }

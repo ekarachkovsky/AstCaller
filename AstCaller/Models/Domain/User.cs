@@ -15,5 +15,7 @@ namespace AstCaller.Models.Domain
         public IEnumerable<CampaignAbonent> CampaignAbonents { get; set; }
 
         public IEnumerable<CampaignSchedule> CampaignSchedules { get; set; }
+
+        public IEnumerable<AsteriskExtension> AsteriskExtensions { get; set; }
     }
 }

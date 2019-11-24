@@ -1,0 +1,38 @@
+﻿@model IEnumerable<AstCaller.ViewModels.AsteriskExtensionViewModel>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<a class="btn btn-info" href="@Url.Action("Edit")">Добавить</a>
+<table class="table table-striped table-paginated">
+    <thead>
+        <tr>
+            <th>
+                Экстеншн
+            </th>
+            <th>
+                Описание
+            </th>
+            <th> </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in @Model)
+        {
+            <tr style="@(item.Disabled ? "color:#ccc":"")">
+                <td>@item.Extension</td>
+                <td>@item.Title</td>
+                <td>
+                    @if (!item.Disabled)
+                    {
+                    <a href="@Url.Action("Edit", new { extension = item.Extension })"><span class="oi oi-pencil"></span></a>
+                    <a href="@Url.Action("Disable", new { extension = item.Extension })"><span class="oi oi-trash"></span></a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

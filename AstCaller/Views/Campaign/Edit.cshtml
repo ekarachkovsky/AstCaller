@@ -25,6 +25,16 @@
                 <input asp-for="VoiceFile" accept=".wav,.mp3" class="form-control" />
                 <span asp-validation-for="VoiceFile" class="text-danger"></span>
             </div>
+            <div class="form-group">
+                <label asp-for="Action" class="control-label"></label>
+                <select asp-for="Action" class="form-control">
+                    @foreach(var option in (ViewBag.AsteriskActions as IEnumerable<AstCaller.ViewModels.AsteriskExtensionViewModel>))
+                    {
+                        <option value="@(option.Extension)">[@option.Extension] @option.Title</option>
+                    }
+                </select>
+                <span asp-validation-for="VoiceFile" class="text-danger"></span>
+            </div>
         </div>
         <div class="col-md-8">
             <h4>Расписание</h4>

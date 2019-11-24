@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace AstCaller.Controllers
 {
@@ -12,11 +14,12 @@ namespace AstCaller.Controllers
     public class AccountController : Controller
     {
         private readonly SignInManager<UserModel> _signInManager;
+        private readonly ILogger<AccountController> _logger;
 
-        public AccountController(
-            SignInManager<UserModel> signInManager)
+        public AccountController(SignInManager<UserModel> signInManager, ILogger<AccountController> logger)
         {
             _signInManager = signInManager;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -42,6 +45,8 @@ namespace AstCaller.Controllers
                 {
                     return RedirectToLocal(returnUrl);
                 }
+
+                _logger.LogError($"Cannot log in {JsonConvert.SerializeObject(result)}");
 
                 if (result.IsLockedOut)
                 {

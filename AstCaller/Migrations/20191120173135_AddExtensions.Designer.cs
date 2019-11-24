@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AstCaller.Migrations
 {
     [DbContext(typeof(MainContext))]
-    [Migration("20191117190505_AddAdditionalInfo")]
-    partial class AddAdditionalInfo
+    [Migration("20191120173135_AddExtensions")]
+    partial class AddExtensions
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -18,6 +18,27 @@ namespace AstCaller.Migrations
             modelBuilder
                 .HasAnnotation("ProductVersion", "2.2.6-servicing-10079")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
+
+            modelBuilder.Entity("AstCaller.Models.Domain.AsteriskExtension", b =>
+                {
+                    b.Property<string>("Extension")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<bool>("Disabled");
+
+                    b.Property<string>("ExtensionCode");
+
+                    b.Property<int>("ModifierId");
+
+                    b.Property<string>("Title");
+
+                    b.HasKey("Extension")
+                        .HasName("pk_asteriskextension");
+
+                    b.HasIndex("ModifierId");
+
+                    b.ToTable("asteriskextension");
+                });
 
             modelBuilder.Entity("AstCaller.Models.Domain.Campaign", b =>
                 {
@@ -28,6 +49,8 @@ namespace AstCaller.Migrations
 
                     b.Property<string>("AbonentsFileName")
                         .HasColumnType("varchar(255)");
+
+                    b.Property<string>("Extension");
 
                     b.Property<DateTime>("Modified");
 
@@ -42,6 +65,8 @@ namespace AstCaller.Migrations
                         .HasColumnType("varchar(255)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Extension");
 
                     b.HasIndex("ModifierId");
 
@@ -129,8 +154,22 @@ namespace AstCaller.Migrations
                     b.ToTable("users");
                 });
 
+            modelBuilder.Entity("AstCaller.Models.Domain.AsteriskExtension", b =>
+                {
+                    b.HasOne("AstCaller.Models.Domain.User", "Modifier")
+                        .WithMany("AsteriskExtensions")
+                        .HasForeignKey("ModifierId")
+                        .HasConstraintName("fk_asteriskextension_modifier")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
             modelBuilder.Entity("AstCaller.Models.Domain.Campaign", b =>
                 {
+                    b.HasOne("AstCaller.Models.Domain.AsteriskExtension", "AsteriskExtension")
+                        .WithMany("Campaigns")
+                        .HasForeignKey("Extension")
+                        .HasConstraintName("fk_campaign_extension");
+
                     b.HasOne("AstCaller.Models.Domain.User", "Modifier")
                         .WithMany("Campaigns")
                         .HasForeignKey("ModifierId")

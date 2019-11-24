@@ -21,6 +21,12 @@
     <Compile Remove="Migrations\20191117021540_AddTimeConditions.Designer.cs" />
     <Compile Remove="Migrations\20191117063700_MoveTimeConditionsToSchedule.cs" />
     <Compile Remove="Migrations\20191117063700_MoveTimeConditionsToSchedule.Designer.cs" />
+    <Compile Remove="Migrations\20191117064809_AddTimeConditions.cs" />
+    <Compile Remove="Migrations\20191117064809_AddTimeConditions.Designer.cs" />
+    <Compile Remove="Migrations\20191117190505_AddAdditionalInfo.cs" />
+    <Compile Remove="Migrations\20191117190505_AddAdditionalInfo.Designer.cs" />
+    <Compile Remove="Migrations\20191118090502_AddSchedules.cs" />
+    <Compile Remove="Migrations\20191118090502_AddSchedules.Designer.cs" />
   </ItemGroup>
 
 

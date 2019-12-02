@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace AstCaller.Models.Domain
 {
@@ -20,8 +21,14 @@ namespace AstCaller.Models.Domain
 
         public Guid UniqueId { get; set; }
 
-        public int Status { get; set; }
+        public int? Status { get; set; }
 
         public string CallInfo { get; set; }
+
+        public DateTime? CallStartDate { get; set; }
+
+        public IEnumerable<CampaignAbonentHistory> CampaignAbonentHistories { get; set; }
+
+        public CallStatus CallStatus { get; set; }
     }
 }

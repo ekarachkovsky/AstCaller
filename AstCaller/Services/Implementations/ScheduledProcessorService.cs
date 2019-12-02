@@ -49,8 +49,9 @@ namespace AstCaller.Services.Implementations
                 return;
             }
 
-            foreach(var abonent in abonents)
+            foreach (var abonent in abonents)
             {
+                await UpdateAbonentAsync(abonent);
                 if (_schedule.Action == "Play")
                 {
                     await GeneratePlayCallFile(abonent);
@@ -59,8 +60,6 @@ namespace AstCaller.Services.Implementations
                 {
                     await GenerateExtensionCallFile(abonent);
                 }
-
-                await UpdateAbonentAsync(abonent);
             }
         }
 
@@ -75,7 +74,8 @@ namespace AstCaller.Services.Implementations
                 "Extension: s" + Environment.NewLine +
                 "Priority: 1" + Environment.NewLine +
                 $"Set: audiofile={FileType.Voice.ToFileName(_schedule.CampaignId)}" + Environment.NewLine +
-                "Archive: Yes");
+                $"Set: abonentid={abonent.Id}");
+            //"Archive: Yes");
 
             File.Move(tempFile, Path.Combine(_configuration.GetValue<string>("Asterisk:CallFilesDir"), fileName));
         }
@@ -84,6 +84,7 @@ namespace AstCaller.Services.Implementations
         {
             var entity = await _context.CampaignAbonents.FirstAsync(x => x.Id == abonent.Id);
             entity.Status = 1;
+            entity.CallStartDate = DateTime.Now;
             await _context.SaveChangesAsync();
         }
 
@@ -99,23 +100,13 @@ namespace AstCaller.Services.Implementations
                 "Archive: Yes");
 
             File.Move(tempFile, Path.Combine(_configuration.GetValue<string>("Asterisk:CallFilesDir"), fileName));
-            /*
-             * Channel: SIP/voip_trunk/$number
-Callerid: $number
-MaxRetries: 200
-RetryTime: 20
-WaitTime: 30
-Context: outboundmsg1
-Extension: s
-Priority: 1
-              */
         }
 
         private async Task FinishCampaignAsync()
         {
-                var campaign = await _context.Campaigns.FirstAsync(x => x.Id == _schedule.CampaignId);
-                campaign.Status = (int)CampaignViewModel.CampaignStatuses.Finished;
-                await _context.SaveChangesAsync();
+            var campaign = await _context.Campaigns.FirstAsync(x => x.Id == _schedule.CampaignId);
+            campaign.Status = (int)CampaignViewModel.CampaignStatuses.Finished;
+            await _context.SaveChangesAsync();
         }
 
         private int CallsInProcess()
@@ -125,19 +116,19 @@ Priority: 1
 
         private async Task<IEnumerable<ScheduleTaskAbonentModel>> GetAbonentsAsync(int callsInProcess)
         {
-                var abonents = await _context.CampaignAbonents.Where(x => x.CampaignId == _schedule.CampaignId &&
-                        x.Status == 0 &&
-                        !x.HasErrors)
-                    .Select(x => new ScheduleTaskAbonentModel
-                    {
-                        Id = x.Id,
-                        Phone = x.Phone,
-                        UniqueId = x.UniqueId
-                    })
-                    .Take(_lineLimit - callsInProcess)
-                    .ToArrayAsync();
+            var abonents = await _context.CampaignAbonents.Where(x => x.CampaignId == _schedule.CampaignId &&
+                    (!x.Status.HasValue || x.Status < 1) &&
+                    !x.HasErrors)
+                .Select(x => new ScheduleTaskAbonentModel
+                {
+                    Id = x.Id,
+                    Phone = x.Phone,
+                    UniqueId = x.UniqueId
+                })
+                .Take(_lineLimit - callsInProcess)
+                .ToArrayAsync();
 
-                return abonents;
+            return abonents;
         }
     }
 }

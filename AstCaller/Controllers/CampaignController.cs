@@ -203,7 +203,7 @@ namespace AstCaller.Controllers
 
                 if (model.VoiceFile != null)
                 {
-                    var voiceFileName = FileType.Voice.ToFileName(entity.Id) + Path.GetExtension(model.VoiceFile.FileName);
+                    var voiceFileName = FileType.Voice.ToFileName(entity.Id);
                     await SaveFile(model.VoiceFile, voiceFileName);
                     entity.VoiceFileName = model.VoiceFile.FileName;
                     if (_configuration.GetValue<bool>("Asterisk:UseSox"))
@@ -212,7 +212,7 @@ namespace AstCaller.Controllers
                     }
                     else
                     {
-                        System.IO.File.Copy(Path.Combine(_uploadsDir, voiceFileName), Path.Combine(_configuration.GetValue<string>("Asterisk:Sounds"), voiceFileName));
+                        System.IO.File.Copy(Path.Combine(_uploadsDir, voiceFileName), Path.Combine(_configuration.GetValue<string>("Asterisk:Sounds"), voiceFileName) + Path.GetExtension(model.VoiceFile.FileName));
                     }
                 }
 
@@ -243,7 +243,7 @@ namespace AstCaller.Controllers
                     StartInfo = new System.Diagnostics.ProcessStartInfo
                     {
                         FileName = soxExecutable,
-                        Arguments = $"{Path.Combine(_uploadsDir, fileName)} -r 8k -c 1 -b 16 {Path.Combine(_configuration.GetValue<string>("Asterisk:Sounds"), Path.GetFileNameWithoutExtension(fileName))}.wav",
+                        Arguments = $"{Path.Combine(_uploadsDir, fileName)} -r 8k -c 1 -b 16 {Path.Combine(_configuration.GetValue<string>("Asterisk:Sounds"), fileName)}.wav",
                         RedirectStandardOutput = true,
                         UseShellExecute = false,
                         CreateNoWindow = true

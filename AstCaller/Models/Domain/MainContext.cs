@@ -12,8 +12,10 @@ namespace AstCaller.Models.Domain
         public DbSet<User> Users { get; set; }
         public DbSet<Campaign> Campaigns { get; set; }
         public DbSet<CampaignAbonent> CampaignAbonents { get; set; }
+        public DbSet<CampaignAbonentHistory> CampaignAbonentHistories { get; set; }
         public DbSet<CampaignSchedule> CampaignSchedules { get; set; }
         public DbSet<AsteriskExtension> AsteriskExtensions { get; set; }
+        public DbSet<CallStatus> CallStatuses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -49,12 +51,18 @@ namespace AstCaller.Models.Domain
                 entity.Property(p => p.HasErrors);
                 entity.HasOne(p => p.Campaign)
                     .WithMany(c => c.CampaignAbonents)
-                    .HasForeignKey(c=>c.CampaignId)
+                    .HasForeignKey(c => c.CampaignId)
                     .HasConstraintName("fk_campaignabonent_campaign");
                 entity.HasOne(p => p.Modifier)
                     .WithMany(u => u.CampaignAbonents)
                     .HasForeignKey(p => p.ModifierId)
                     .HasConstraintName("fk_campaignabonent_modifier");
+
+                entity.HasOne(p => p.CallStatus)
+                    .WithMany(c => c.CampaignAbonents)
+                    .HasForeignKey(c => c.Status)
+                    .IsRequired(false)
+                    .HasConstraintName("fk_campaignabonent_callstatus");
             });
 
             modelBuilder.Entity<CampaignSchedule>(entity =>
@@ -70,7 +78,7 @@ namespace AstCaller.Models.Domain
 
                 entity.HasOne(p => p.Modifier)
                     .WithMany(u => u.CampaignSchedules)
-                    .HasForeignKey(c=>c.ModifierId)
+                    .HasForeignKey(c => c.ModifierId)
                     .HasConstraintName("fk_campaignschedule_modifier");
             });
 
@@ -89,6 +97,32 @@ namespace AstCaller.Models.Domain
                     .WithOne(p => p.AsteriskExtension)
                     .HasForeignKey(p => p.Extension)
                     .HasConstraintName("fk_campaign_extension");
+            });
+
+            modelBuilder.Entity<CampaignAbonentHistory>(entity =>
+            {
+                entity.ToTable("campaignabonenthistory");
+                entity.HasKey(e => e.Id)
+                    .HasName("pk_campaignabonenthistory");
+
+                entity.HasOne(p => p.CampaignAbonent)
+                    .WithMany(c => c.CampaignAbonentHistories)
+                    .HasForeignKey(c => c.CampaignAbonentId)
+                    .HasConstraintName("fk_campaignabonenthistory_campaignabonent");
+
+                entity.HasOne(p => p.CallStatus)
+                    .WithMany(c => c.CampaignAbonentHistories)
+                    .HasForeignKey(c => c.Status)
+                    .IsRequired(false)
+                    .HasConstraintName("fk_campaignabonenthistory_callstatus");
+                    
+            });
+
+            modelBuilder.Entity<CallStatus>(entity =>
+            {
+                entity.ToTable("callstatus");
+                entity.HasKey(e => e.Id)
+                    .HasName("pk_callstatus");
             });
         }
     }

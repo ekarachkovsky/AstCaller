@@ -21,12 +21,111 @@
                 <td>Абонентов в процессе:</td>
                 <td id="abonentsInProcess">n/a</td>
             </tr>
+            <tr style="display:none;">
+                <td>Зависшие звонки:</td>
+                <td id="abonentsInProcessStuck">n/a</td>
+            </tr>
         </table>
     </div>
     <div class="col-md-8">
-        <h3>Статистика за сегодня</h3>
+        <h3>Статистика на <input type="text" class="form-control" id="currentDate" value="@(DateTime.Now.ToString("dd.MM.yyyy"))" /></h3>
         <div id="statsHolder">
             <div class="text-center" style="min-height: 300px;padding-top: 120px;background-color: #f1f1f1;"><i class="oi oi-ban" style="font-size: 50px;color: #ccc;"></i></div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+<script type="text/javascript">
+    (function () {
+        var processRunner = function () {
+            $.get('@Url.Action("Current","Statistics")', function (data) {
+                $('#campaignsActive').text(data.activeCampaigns);
+                $('#campaignsRunning').text(data.currentRunningCampaigns);
+                $('#abonentsUnprocessed').text(data.abonentsToCall);
+                $('#abonentsInProcess').text(data.abonentsInProcess);
+                $('#abonentsInProcessStuck').text(data.abonentsInProcessStuck);
+                $('#abonentsInProcessStuck').toggle(data.abonentsInProcessStuck);
+            }).always(function () {
+                setTimeout(processRunner, 10000);
+            });
+        };
+
+        processRunner();
+    })();
+
+    (function () {
+        var datePicker = $('#currentDate');
+        datePicker.datepicker({
+            language: 'ru',
+            autoclose: true,
+            format: 'dd.mm.yyyy'
+        });
+        var container = $('#statsHolder');
+        var today = datePicker.val();
+
+        var processRunner = function () {
+            var dat = datePicker.val();
+
+            $.get('@Url.Action("Hourly","Statistics")?currentDate=' + dat,
+                function (data) {
+                    if (!data || !data.statuses) {
+                        return;
+                    }
+                    
+                    var contents = '<table class="table table-sm table-hover"><thead class="thead-light"><tr>' +
+                        '<th rowspan="2">Часы</th>';
+                    var headerCnt = 0;
+                    var header = '';
+                    for (var stat in data.statuses) {
+                        if (!data.statuses.hasOwnProperty(stat) || stat==1 || stat==4) {
+                            continue;
+                        }
+                        headerCnt++;
+                        header += '<th>' + data.statuses[stat] + '</th>';
+                    }
+
+                    if (headerCnt) {
+                        contents += '<th colspan="' + headerCnt + '">По статусам</th>';
+                    }
+                    contents += '</tr><tr>' + header + '</tr></thead><tbody>';
+                    for (var i = 0; i < 24; i++) {
+                        contents += '<tr><td>' + ('0' + i).substr(-2) + '</td>';
+                        for (var stat in data.statuses) {
+                            if (!data.statuses.hasOwnProperty(stat) || stat==1 || stat==4) {
+                                continue;
+                            }
+                            var res = 0;
+
+                            if (data.hours &&
+                                data.hours.length > 0 &&
+                                (i in data.hours) &&
+                                data.hours[i] &&
+                                data.hours[i].Counts &&
+                                (j in data.hours[i].Counts)) {
+                                res = data.hours[i].Counts[j]
+                            }
+
+                            contents += '<td>' + res + '</td>';
+                        }
+                        contents += '</tr>'
+                    }
+                    contents += '</tbody></table>'
+
+
+                    container.html(contents);
+                }).always(function () {
+                    if (dat == today) {
+                        setTimeout(processRunner, 10000);
+                    }
+                });
+        };
+
+        datePicker.change(function () {
+            processRunner();
+        });
+
+        processRunner();
+    })();
+</script>
+}

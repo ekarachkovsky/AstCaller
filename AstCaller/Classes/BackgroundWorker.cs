@@ -48,7 +48,7 @@ namespace AstCaller.Classes
                         }
 
                         var callFinalizer = scope.ServiceProvider.GetRequiredService<ICallFinalizer>();
-                        await callFinalizer.ExecuteAsync();
+                        //await callFinalizer.ExecuteAsync();
                         await callFinalizer.CleanupAsync();
                     }
                 }

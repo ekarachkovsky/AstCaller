@@ -93,8 +93,8 @@ namespace AstCaller.Services.Implementations
             var abonents = _context.CampaignAbonents.Where(x => !x.HasErrors && (x.Status == 0 || x.Status == 1));
 
             var finishedCampaigns = await _context.Campaigns
-                .Where(x => (x.Status == (int)CampaignViewModel.CampaignStatuses.Stopped || x.Status == (int)CampaignViewModel.CampaignStatuses.Running) 
-                && !abonents.Any(a=>a.CampaignId == x.Id))
+                .Where(x => (x.Status == (int)CampaignViewModel.CampaignStatuses.Stopped || x.Status == (int)CampaignViewModel.CampaignStatuses.Running)
+                && !abonents.Any(a => a.CampaignId == x.Id))
                 .Select(x => x.Id).ToArrayAsync();
             if (finishedCampaigns.Length > 0)
             {

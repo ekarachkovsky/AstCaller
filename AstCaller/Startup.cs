@@ -2,6 +2,8 @@
 using System.Globalization;
 using System.Linq;
 using AstCaller.Classes;
+using AstCaller.DataLayer;
+using AstCaller.DataLayer.Implementations;
 using AstCaller.DataLayer.Stores;
 using AstCaller.Models;
 using AstCaller.Models.Domain;
@@ -123,8 +125,19 @@ namespace AstCaller
                     if (!context.Users.Any())
                     {
                         var service = new SeedDatabase(context);
-
                         service.CreateAdminUser();
+                    }
+
+                    if (!context.CallStatuses.Any())
+                    {
+                        var service = new SeedDatabase(context);
+                        service.CreateCallStatuses();
+                    }
+
+                    if (!context.AsteriskExtensions.Any())
+                    {
+                        var service = new SeedDatabase(context);
+                        service.CreateAsteriskExtensions();
                     }
                 }
             }
@@ -143,6 +156,7 @@ namespace AstCaller
                 .AddTransient<IScheduleService, ScheduleService>()
                 .AddTransient<IScheduledServiceProcessorFactory, ScheduledServiceProcessorFactory>()
                 .AddTransient<ICallFinalizer, CallFinalizer>()
+                .AddTransient<IReportingService,ReportingService>()
                 .AddSingleton<Microsoft.Extensions.Hosting.IHostedService, BackgroundWorker>()
                 .AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true))
             /*.AddLogging(loggingBuilder =>

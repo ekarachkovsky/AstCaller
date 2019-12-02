@@ -1,0 +1,101 @@
+﻿@model AstCaller.ViewModels.Reports.ReportCampaignsViewModel
+@{
+    ViewData["Title"] = "По кампаниям";
+}
+
+<div class="row">
+    <div class="col-md2">
+        <div class="nav flex-column nav-pills">
+            <a asp-action="Campaign" class="nav-link active">По Кампаниям</a>
+        </div>
+    </div>
+    <div class="col-md-10">
+        <div>
+            <form asp-action="Campaign" method="get">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Отчет по Кампании обзвона</span>
+                    </div>
+                    <select class="form-control"
+                            name="campaignId"
+                            asp-items="(ViewBag.Campaigns as IEnumerable<AstCaller.ViewModels.IdNameViewModel>)
+                                            .Select(x=>new SelectListItem { Value=x.Id.ToString(), Text=x.Name, Selected=x.Id == (int)ViewBag.CampaignId })">
+                    </select>
+                    <div class="input-group-append">
+                        <input type="submit" class="btn btn-outline-secondary" value="Сформировать" />
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        @if (ViewBag.CampaignId > 0)
+        {
+    <div style="border: 1px solid #ccc; padding: 5px; margin-top:10px;">
+        <h4>Статистика по обзвону:</h4>
+        <table class="table table-striped">
+            <tbody>
+                <tr>
+                    <td>Всего абонентов загружено:</td>
+                    <td>@Model.Stats.TotalAbonents</td>
+                </tr>
+                <tr>
+                    <td>Из них ошибочных:</td>
+                    <td>@Model.Stats.TotalAbonentsWithErrors</td>
+                </tr>
+                <tr>
+                    <td>Подняли трубку:</td>
+                    <td>@Model.Stats.Answered</td>
+                </tr>
+                <tr>
+                    <td>Не подняли трубку:</td>
+                    <td>@Model.Stats.UnansweredAbonents</td>
+                </tr>
+                <tr>
+                    <td>Всего неотвеченных звонков:</td>
+                    <td>@Model.Stats.TotalUnansweredCalls</td>
+                </tr>
+            </tbody>
+        </table>
+        <h4>Детальная статистика по обзвону:</h4>
+        <table class="table table-hover table-sm">
+            <thead class="thead-light">
+                <tr>
+                    <th>Телефон</th>
+                    <th>Статус</th>
+                    <th>Дата попадания в очередь</th>
+                    <th>Количество попыток дозвона</th>
+                    <th>Детализация</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Details)
+                {
+                    <tr>
+                        <td>
+                            @item.Phone
+                        </td>
+                        <td>
+                            @item.LastStatusName
+                        </td>
+                        <td>
+                            @item.CallStartDate?.ToString("dd.MM.yyyy")
+                        </td>
+                        <td>
+                            @(item.Attempts?.Count() ?? 0)
+                        </td>
+                        <td>
+                            <ol>
+                                @foreach (var detItem in item.Attempts)
+                                {
+                                    <li>Дата: @detItem.CallDate.ToString("dd.MM.yyyy HH:mm:ss"), Статус: @detItem.StatusName</li>
+                                }
+                            </ol>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+        }
+    </div>
+</div>

@@ -27,6 +27,10 @@
     <Compile Remove="Migrations\20191117190505_AddAdditionalInfo.Designer.cs" />
     <Compile Remove="Migrations\20191118090502_AddSchedules.cs" />
     <Compile Remove="Migrations\20191118090502_AddSchedules.Designer.cs" />
+    <Compile Remove="Migrations\20191125165542_AddCallHistory.cs" />
+    <Compile Remove="Migrations\20191125165542_AddCallHistory.Designer.cs" />
+    <Compile Remove="Migrations\20191126045500_ImproveStatistics.cs" />
+    <Compile Remove="Migrations\20191126045500_ImproveStatistics.Designer.cs" />
   </ItemGroup>
 
 
@@ -51,7 +55,6 @@
 
   <ItemGroup>
     <Folder Include="Areas\" />
-    <Folder Include="DataLayer\Implementations\" />
   </ItemGroup>
 
 </Project>

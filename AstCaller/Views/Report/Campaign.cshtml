@@ -4,13 +4,13 @@
 }
 
 <div class="row">
-    <div class="col-md2">
+    <div class="col-md2 d-print-none">
         <div class="nav flex-column nav-pills">
             <a asp-action="Campaign" class="nav-link active">По Кампаниям</a>
         </div>
     </div>
-    <div class="col-md-10">
-        <div>
+    <div class="col-md-10 report-container">
+        <div class="d-print-none">
             <form asp-action="Campaign" method="get">
                 <div class="input-group">
                     <div class="input-group-prepend">
@@ -30,72 +30,93 @@
 
         @if (ViewBag.CampaignId > 0)
         {
-    <div style="border: 1px solid #ccc; padding: 5px; margin-top:10px;">
-        <h4>Статистика по обзвону:</h4>
-        <table class="table table-striped">
-            <tbody>
-                <tr>
-                    <td>Всего абонентов загружено:</td>
-                    <td>@Model.Stats.TotalAbonents</td>
-                </tr>
-                <tr>
-                    <td>Из них ошибочных:</td>
-                    <td>@Model.Stats.TotalAbonentsWithErrors</td>
-                </tr>
-                <tr>
-                    <td>Подняли трубку:</td>
-                    <td>@Model.Stats.Answered</td>
-                </tr>
-                <tr>
-                    <td>Не подняли трубку:</td>
-                    <td>@Model.Stats.UnansweredAbonents</td>
-                </tr>
-                <tr>
-                    <td>Всего неотвеченных звонков:</td>
-                    <td>@Model.Stats.TotalUnansweredCalls</td>
-                </tr>
-            </tbody>
-        </table>
-        <h4>Детальная статистика по обзвону:</h4>
-        <table class="table table-hover table-sm">
-            <thead class="thead-light">
-                <tr>
-                    <th>Телефон</th>
-                    <th>Статус</th>
-                    <th>Дата попадания в очередь</th>
-                    <th>Количество попыток дозвона</th>
-                    <th>Детализация</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model.Details)
-                {
-                    <tr>
-                        <td>
-                            @item.Phone
-                        </td>
-                        <td>
-                            @item.LastStatusName
-                        </td>
-                        <td>
-                            @item.CallStartDate?.ToString("dd.MM.yyyy")
-                        </td>
-                        <td>
-                            @(item.Attempts?.Count() ?? 0)
-                        </td>
-                        <td>
-                            <ol>
-                                @foreach (var detItem in item.Attempts)
-                                {
-                                    <li>Дата: @detItem.CallDate.ToString("dd.MM.yyyy HH:mm:ss"), Статус: @detItem.StatusName</li>
-                                }
-                            </ol>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+            <div class="d-none d-print-block">
+                <h3 class="text-center">Отчет по Кампании обзвона</h3>
+                <h4 class="text-center">@((ViewBag.Campaigns as IEnumerable<AstCaller.ViewModels.IdNameViewModel>)?.FirstOrDefault(x=>x.Id == (int)ViewBag.CampaignId)?.Name)</h4>
+            </div>
+            <div class="d-flex flex-row-reverse d-print-none">
+                <button id="printout" class="btn btn-secondary">Распечатать</button>
+            </div>
+            <div id="reportContainer" class="report-container">
+                <h4>Статистика по обзвону: </h4>
+                <table class="table table-striped">
+                    <tbody>
+                        <tr>
+                            <td>Всего абонентов загружено:</td>
+                            <td>@Model.Stats.TotalAbonents</td>
+                        </tr>
+                        <tr>
+                            <td>Из них ошибочных:</td>
+                            <td>@Model.Stats.TotalAbonentsWithErrors</td>
+                        </tr>
+                        <tr>
+                            <td>Подняли трубку:</td>
+                            <td>@Model.Stats.Answered</td>
+                        </tr>
+                        <tr>
+                            <td>Не подняли трубку:</td>
+                            <td>@Model.Stats.UnansweredAbonents</td>
+                        </tr>
+                        <tr>
+                            <td>Всего неотвеченных звонков:</td>
+                            <td>@Model.Stats.TotalUnansweredCalls</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h4>Детальная статистика по обзвону:</h4>
+                <table class="table table-hover table-sm">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Телефон</th>
+                            <th>Статус</th>
+                            <th>Дата попадания в очередь</th>
+                            <th>Количество попыток дозвона</th>
+                            <th>Детализация</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Details)
+                        {
+                            <tr>
+                                <td>
+                                    @item.Phone
+                                </td>
+                                <td>
+                                    @item.LastStatusName
+                                </td>
+                                <td>
+                                    @item.CallStartDate?.ToString("dd.MM.yyyy")
+                                </td>
+                                <td>
+                                    @(item.Attempts?.Count() ?? 0)
+                                </td>
+                                <td>
+                                    <ol>
+                                        @foreach (var detItem in item.Attempts)
+                                        {
+                                            <li>Дата: @detItem.CallDate.ToString("dd.MM.yyyy HH:mm:ss"), Статус: @detItem.StatusName</li>
+                                        }
+                                    </ol>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
     </div>
 </div>
+
+@section Scripts {
+    <script type="text/javascript">
+        (function () {
+            var btn = $('#printout');
+            if (!btn.length)
+                return;
+
+            btn.click(function () {
+                window.print();
+            });
+        })();
+    </script>
+}

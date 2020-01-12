@@ -22,6 +22,7 @@ namespace AstCaller.DataLayer.Implementations
             var query = await (from ab in _context.CampaignAbonents
                         join h in _context.CampaignAbonentHistories on ab.Id equals h.CampaignAbonentId into htmp
                         from h in htmp.DefaultIfEmpty()
+                        where ab.CampaignId == campaignId
                         select new
                         {
                             ab.Id,

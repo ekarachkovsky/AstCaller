@@ -80,6 +80,7 @@ namespace AstCaller.Controllers
                     AbonentsFileName = entity.AbonentsFileName,
                     VoiceFileName = entity.VoiceFileName,
                     Action = entity.Extension,
+                    LineLimit = entity.LineLimit,
 
                     Schedules = schedules.Select(x => new CampaignScheduleViewModel
                     {
@@ -89,7 +90,13 @@ namespace AstCaller.Controllers
                         TimeEnd = TimeToString(x.TimeEnd),
                         DaysOfWeek = x.DaysOfWeek
                     })
-                });
+                }); ;
+            }
+
+            var lineLimit = _configuration.GetValue<int>("Asterisk:LinesLimit");
+            if (lineLimit < 1)
+            {
+                lineLimit = 6;
             }
 
             return View(new CampaignViewModel
@@ -105,7 +112,8 @@ namespace AstCaller.Controllers
                         TimeEnd = "21:00",
                         DaysOfWeek = 127
                     }
-                }
+                },
+                LineLimit = lineLimit
             });
         }
 
@@ -156,6 +164,22 @@ namespace AstCaller.Controllers
                 entity.Modified = DateTime.Now;
                 entity.ModifierId = _currentUserId ?? 0;
                 entity.Extension = model.Action;
+
+                if (model.LineLimit > 500)
+                {
+                    model.LineLimit = 500;
+                }
+                if (model.LineLimit < 1)
+                {
+                    var lineLimit = _configuration.GetValue<int>("Asterisk:LinesLimit");
+                    if (lineLimit < 1)
+                    {
+                        lineLimit = 6;
+                    }
+                    model.LineLimit = lineLimit;
+                }
+
+                entity.LineLimit = model.LineLimit;
 
                 if (!model.Id.HasValue)
                 {
@@ -354,7 +378,7 @@ namespace AstCaller.Controllers
             var campaignIds = data.Select(x => x.Id).ToArray();
 
             var schedules = await _context.CampaignSchedules.Where(x => campaignIds.Contains(x.CampaignId)).ToArrayAsync();
-            Array.ForEach(data, x => x.Schedules = schedules.Where(s=>s.CampaignId == x.Id).Select(s => new CampaignScheduleViewModel
+            Array.ForEach(data, x => x.Schedules = schedules.Where(s => s.CampaignId == x.Id).Select(s => new CampaignScheduleViewModel
             {
                 DateEnd = s.DateEnd,
                 DateStart = s.DateStart,

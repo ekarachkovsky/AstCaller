@@ -9,5 +9,6 @@ namespace AstCaller.Models
     {
         public int CampaignId { get; set; }
         public string Action { get; set; }
+        public int LineLimit { get; set; }
     }
 }

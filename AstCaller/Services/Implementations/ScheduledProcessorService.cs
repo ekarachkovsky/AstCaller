@@ -19,7 +19,6 @@ namespace AstCaller.Services.Implementations
         private readonly MainContext _context;
         private readonly ScheduleTaskModel _schedule;
         private readonly IConfiguration _configuration;
-        private readonly int _lineLimit;
         private readonly string _trunkName;
 
         public ScheduledProcessorService(ILogger<ScheduledProcessorService> logger, MainContext context, IConfiguration configuration, ScheduleTaskModel schedule)
@@ -28,16 +27,15 @@ namespace AstCaller.Services.Implementations
             _context = context;
             _schedule = schedule;
             _configuration = configuration;
-            _lineLimit = _configuration.GetValue<int>("Asterisk:LinesLimit");
             _trunkName = _configuration.GetValue<string>("Asterisk:TrunkName");
         }
 
         public async Task ExecuteAsync()
         {
             var callsInProcess = CallsInProcess();
-            _logger.LogInformation($"ScheduleProcessor({_schedule.CampaignId}) Current calls count: {callsInProcess}, limit: {_lineLimit}");
+            _logger.LogInformation($"ScheduleProcessor({_schedule.CampaignId}) Current calls count: {callsInProcess}, limit: {_schedule.LineLimit}");
 
-            if (callsInProcess > _lineLimit / 2)
+            if (callsInProcess > _schedule.LineLimit / 2)
             {
                 return;
             }
@@ -68,12 +66,12 @@ namespace AstCaller.Services.Implementations
             var fileName = $"call_{_schedule.CampaignId}_{abonent.Id}_{abonent.UniqueId}.call";
             var tempFile = Path.Combine(_configuration.GetValue<string>("Asterisk:TempDir"), fileName);
             await File.WriteAllTextAsync(tempFile,
-                $"Channel: PJSIP/{abonent.Phone}" + Environment.NewLine +
+                $"Channel: local/{abonent.Phone}@from-internal" + Environment.NewLine +
                 "MaxRetries: 3" + Environment.NewLine +
                 $"Context: {_schedule.Action}" + Environment.NewLine +
                 "Extension: s" + Environment.NewLine +
                 "Priority: 1" + Environment.NewLine +
-                $"Set: audiofile={FileType.Voice.ToFileName(_schedule.CampaignId)}" + Environment.NewLine +
+                $"Set: audiofile=ru/{FileType.Voice.ToFileName(_schedule.CampaignId)}" + Environment.NewLine +
                 $"Set: abonentid={abonent.Id}");
             //"Archive: Yes");
 
@@ -125,7 +123,7 @@ namespace AstCaller.Services.Implementations
                     Phone = x.Phone,
                     UniqueId = x.UniqueId
                 })
-                .Take(_lineLimit - callsInProcess)
+                .Take(_schedule.LineLimit - callsInProcess)
                 .ToArrayAsync();
 
             return abonents;

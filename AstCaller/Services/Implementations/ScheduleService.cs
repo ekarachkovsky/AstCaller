@@ -39,6 +39,7 @@ namespace AstCaller.Services.Implementations
                       select new ScheduleTaskModel
                       {
                           CampaignId = cmp.Id,
+                          LineLimit = cmp.LineLimit,
                           Action = cmp.Extension
                       };
 

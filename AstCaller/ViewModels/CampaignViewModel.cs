@@ -67,5 +67,8 @@ namespace AstCaller.ViewModels
         [Display(Name="Действие")]
         public string Action { get; set; }
         public int AbonentsLoaded { get; set; }
+
+        [Display(Name="Ограничение на количество линий")]
+        public int LineLimit { get; set; }
     }
 }

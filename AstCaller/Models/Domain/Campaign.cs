@@ -28,5 +28,6 @@ namespace AstCaller.Models.Domain
         public string Extension { get; set; }
 
         public AsteriskExtension AsteriskExtension { get; set; }
+        public int LineLimit { get; set; }
     }
 }

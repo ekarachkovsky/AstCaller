@@ -59,6 +59,21 @@
                 });
             }
 
+            function restartCampaign(row) {
+                $.post('@Url.Action("Restart")',
+                    { id: row.data('rowid') },
+                    function (result) {
+                        alert('Кампания перезапущена.');
+                        var tab = row.closest('table').getPaginatedTable();
+                        if (tab) {
+                            tab.load();
+                        }
+                    }).fail(function (ex) {
+                        alert('Не удалось перезапустить кампанию');
+                        console.error(ex);
+                    });
+            }
+
             $("#campaignsTable").click(function (event) {
                 var target = $(event.target);
                 if (target.hasClass("oi-media-play")) {
@@ -68,6 +83,9 @@
                 if (target.hasClass('oi-media-stop') || target.hasClass('oi-media-pause')) {
                     stopCampaign(target.closest('tr'), target);
                     return;
+                }
+                if (target.hasClass('oi-reload')) {
+                    restartCampaign(target.closest('tr'));
                 }
             });
         })();

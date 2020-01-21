@@ -102,6 +102,11 @@ namespace AstCaller.Services.Implementations
 
         private async Task FinishCampaignAsync()
         {
+            if(await _context.CampaignAbonents.AnyAsync(x=>x.CampaignId==_schedule.CampaignId && x.Status == 1))
+            {
+                return;
+            }
+
             var campaign = await _context.Campaigns.FirstAsync(x => x.Id == _schedule.CampaignId);
             campaign.Status = (int)CampaignViewModel.CampaignStatuses.Finished;
             await _context.SaveChangesAsync();

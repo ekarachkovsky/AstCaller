@@ -158,13 +158,7 @@ namespace AstCaller
                 .AddTransient<ICallFinalizer, CallFinalizer>()
                 .AddTransient<IReportingService,ReportingService>()
                 .AddSingleton<Microsoft.Extensions.Hosting.IHostedService, BackgroundWorker>()
-                .AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true))
-            /*.AddLogging(loggingBuilder =>
-            {
-                loggingBuilder.AddConsole();
-                loggingBuilder.AddDebug();
-            })*/
-            ;
+                .AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true));
         }
     }
 }

@@ -3,14 +3,16 @@ using System;
 using AstCaller.Models.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace AstCaller.Migrations
 {
     [DbContext(typeof(MainContext))]
-    partial class MainContextModelSnapshot : ModelSnapshot
+    [Migration("20200119143823_AddRolesAndCampaignDeletion")]
+    partial class AddRolesAndCampaignDeletion
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -61,8 +63,6 @@ namespace AstCaller.Migrations
                     b.Property<string>("AbonentsFileName")
                         .HasColumnType("varchar(255)");
 
-                    b.Property<int?>("ClonedFromId");
-
                     b.Property<string>("Extension");
 
                     b.Property<bool>("IsDeleted");
@@ -82,8 +82,6 @@ namespace AstCaller.Migrations
                         .HasColumnType("varchar(255)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ClonedFromId");
 
                     b.HasIndex("Extension");
 
@@ -215,11 +213,6 @@ namespace AstCaller.Migrations
 
             modelBuilder.Entity("AstCaller.Models.Domain.Campaign", b =>
                 {
-                    b.HasOne("AstCaller.Models.Domain.Campaign", "ClonedFrom")
-                        .WithMany("Clones")
-                        .HasForeignKey("ClonedFromId")
-                        .HasConstraintName("fk_campaign_campaign_clone");
-
                     b.HasOne("AstCaller.Models.Domain.AsteriskExtension", "AsteriskExtension")
                         .WithMany("Campaigns")
                         .HasForeignKey("Extension")

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AstCaller.Classes;
 using AstCaller.Models.Domain;
@@ -338,7 +339,7 @@ namespace AstCaller.Controllers
                 throw new Exception("Невозможно удалить кампанию обзвона, которая была запущена ранее");
             }
 
-            _context.Campaigns.Remove(entity);
+            entity.IsDeleted = true;
 
             await _context.SaveChangesAsync();
 
@@ -357,7 +358,8 @@ namespace AstCaller.Controllers
 
             var abonents = _context.CampaignAbonents;
 
-            var query = _context.Campaigns.Select(x => new CampaignViewModel
+            var query = _context.Campaigns.Where(x => !x.IsDeleted)
+                .Select(x => new CampaignViewModel
             {
                 Id = x.Id,
                 AbonentsFileName = x.AbonentsFileName,
@@ -367,6 +369,7 @@ namespace AstCaller.Controllers
                 VoiceFileName = x.VoiceFileName,
                 AbonentsLoaded = abonents.Count(ca => ca.CampaignId == x.Id),
                 AbonentsProcessed = abonents.Count(ca => ca.CampaignId == x.Id && ca.Status != 0),
+                AbonentsAnswered = abonents.Count(ca=>ca.CampaignId == x.Id && ca.Status == 2),
                 Modified = x.Modified
             });
             var data = await query
@@ -470,6 +473,87 @@ namespace AstCaller.Controllers
             _context.SaveChanges();
 
             return new JsonResult(new { success = true });
+        }
+
+        public async Task<IActionResult> Restart(int id)
+        {
+            using (var tr = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    var campaignEntity = await _context.Campaigns.FirstAsync(x => x.Id == id);
+
+                    var newCampaign = new Campaign
+                    {
+                        IsDeleted = false,
+                        LineLimit = campaignEntity.LineLimit,
+                        Modified = DateTime.Now,
+                        ModifierId = _currentUserId.Value,
+                        Name = GetCampaignName(campaignEntity.Name),
+                        AbonentsCount = await _context.CampaignAbonents.Where(x=>x.CampaignId==id && !x.HasErrors).CountAsync(),
+                        AsteriskExtension=campaignEntity.AsteriskExtension,
+                        AbonentsFileName=campaignEntity.AbonentsFileName,
+                        VoiceFileName = campaignEntity.VoiceFileName,
+                        Extension=campaignEntity.Extension,
+                        ClonedFromId = id
+                    };
+
+                    _context.Add(newCampaign);
+                    await _context.SaveChangesAsync();
+
+                    System.IO.File.Copy(Path.Combine(_uploadsDir, FileType.Abonents.ToFileName(id)),
+                        Path.Combine(_uploadsDir, FileType.Abonents.ToFileName(newCampaign.Id)));
+                    System.IO.File.Copy(Path.Combine(_uploadsDir, FileType.Voice.ToFileName(id)),
+                        Path.Combine(_uploadsDir, FileType.Voice.ToFileName(newCampaign.Id)));
+
+                    var abonents = await _context.CampaignAbonents.Where(x => x.CampaignId == id && !x.HasErrors)
+                        .Select(x => new CampaignAbonent
+                        {
+                            CampaignId=newCampaign.Id,
+                            ModifierId=_currentUserId.Value,
+                            Modified=DateTime.Now,
+                            Phone=x.Phone,
+                            UniqueId = Guid.NewGuid()
+                        }).ToArrayAsync();
+                    await _context.AddRangeAsync(abonents);
+
+                    var schedules = await _context.CampaignSchedules.Where(x => x.CampaignId == id)
+                        .Select(x => new CampaignSchedule
+                        {
+                            CampaignId=newCampaign.Id,
+                            DateEnd=x.DateEnd,
+                            DateStart=x.DateStart,
+                            DaysOfWeek=x.DaysOfWeek,
+                            ModifierId=_currentUserId.Value,
+                            TimeEnd=x.TimeEnd,
+                            TimeStart=x.TimeStart
+                        }).ToArrayAsync();
+                    await _context.AddRangeAsync(schedules);
+
+                    await _context.SaveChangesAsync();
+
+                    tr.Commit();
+
+                    return Json(new { Success=true });
+                }
+                catch
+                {
+                    tr.Rollback();
+                    throw;
+                }
+            }
+        }
+
+        private string GetCampaignName(string name)
+        {
+            var reg = new Regex("(.+) - Перезапуск(\\(\\d\\))?");
+            var regRes = reg.Match(name);
+            if (regRes.Success)
+            {
+                var counter = regRes.Groups[2].Success ? int.Parse(regRes.Groups[2].Value.Replace("(", "").Replace(")", "")) + 1 : 1;
+                return $"{regRes.Groups[1].Value} - Перезапуск({counter})";
+            }
+            return $"{name} - Перезапуск";
         }
 
         private async Task SaveFile(IFormFile file, string saveName)

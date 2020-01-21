@@ -22,11 +22,15 @@
             }
             else
             {
+                if(entity.AbonentsAnswered < entity.AbonentsProcessed)
+                {
+                    <span class="oi oi-reload" title="Перезапустить обзвон"></span>
+                }
                 <span class="campaign-status">Завершен</span>
             }
         </td>
         <td>
-            @entity.AbonentsTotal / @entity.AbonentsLoaded / @entity.AbonentsProcessed
+            @entity.AbonentsTotal / @entity.AbonentsLoaded / @entity.AbonentsProcessed / @entity.AbonentsAnswered
         </td>
         <td>
             <audio controls="" preload="none">

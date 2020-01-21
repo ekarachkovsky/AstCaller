@@ -1,0 +1,31 @@
+﻿@model IEnumerable<AstCaller.ViewModels.UserViewModel>
+@{
+    ViewData["Title"] = "Кампании обзвона";
+}
+<a class="btn btn-info" href="@Url.Action("Edit")">Добавить</a>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Логин</th>
+            <th>Имя пользователя</th>
+            <th>Роль</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Login</td>
+                <td>@item.Fullname</td>
+                <td>@item.Role</td>
+                <td>
+                    <a href="@Url.Action("Edit", new { id=item.Id })"><span class="oi oi-pencil"></span></a>
+                    <a href="@Url.Action("Delete", new { id = item.Id })"><span class="oi oi-trash"></span></a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<a class="btn btn-info" href="@Url.Action("Edit")">Добавить</a>
+

@@ -114,11 +114,22 @@
     }
 }
 
+
+
 (function () {
+    $.fn.getPaginatedTable = function () {
+        if ($(this).length !== 1) {
+            return undefined;
+        }
+
+        return $(this).data('paginatedTable');
+    }
+
     let me = this;
 
     $("table.table-paginated").each(function () {
-        (new PaginatedTable($(this))).load();
+        $(this).data('paginatedTable', new PaginatedTable($(this)));
+        $(this).getPaginatedTable().load();
     });
 
     return me;

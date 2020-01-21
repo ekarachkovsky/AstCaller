@@ -49,6 +49,28 @@ namespace AstCaller.Controllers
             return View(model);
         }
 
+        public async Task<IActionResult> FailedCalls(int campaignId = 0)
+        {
+            ViewBag.Campaigns = await GetCampaigns();
+            ViewBag.CampaignId = campaignId;
+            if (campaignId < 1)
+            {
+                return View();
+            }
+
+            var stats = await _context.CampaignAbonents.Where(x => x.CampaignId == campaignId && 
+                !_context.CampaignAbonentHistories.Any(h => h.CampaignAbonentId == x.Id && h.Status == 2))
+                .Select(x => new ReportFailedCallsViewModel
+                {
+                    Id = x.Id,
+                    Phone = x.Phone,
+                    Status = x.CallStatus.StatusName,
+                    Attempts = x.CampaignAbonentHistories.Count()
+                }).ToArrayAsync();
+
+            return View(stats);
+        }
+
         private async Task<IEnumerable<IdNameViewModel>> GetCampaigns()
         {
             return await _context.Campaigns

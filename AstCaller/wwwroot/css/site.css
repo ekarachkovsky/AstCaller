@@ -80,12 +80,21 @@ body {
     }
 
 .oi-media-pause {
+    cursor: pointer;
     color: #808080;
 }
 
 .oi-media-pause:hover {
     color: #535353;
+}
+
+.oi-reload {
+    color: #759efa;
     cursor: pointer;
+}
+
+.oi-reload:hover {
+    color: #003ecd;
 }
 
 .campaign-status {

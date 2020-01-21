@@ -10,6 +10,8 @@ namespace AstCaller.Models.Domain
 
         public string Password { get; set; }
 
+        public string Role { get; set; }
+
         public IEnumerable<Campaign> Campaigns { get; set; }
 
         public IEnumerable<CampaignAbonent> CampaignAbonents { get; set; }
@@ -17,5 +19,6 @@ namespace AstCaller.Models.Domain
         public IEnumerable<CampaignSchedule> CampaignSchedules { get; set; }
 
         public IEnumerable<AsteriskExtension> AsteriskExtensions { get; set; }
+        public bool IsDeleted { get; set; }
     }
 }

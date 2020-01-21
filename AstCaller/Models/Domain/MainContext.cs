@@ -40,6 +40,10 @@ namespace AstCaller.Models.Domain
                 entity.Property(p => p.Name).HasColumnType("varchar(500)");
                 entity.Property(p => p.AbonentsFileName).HasColumnType("varchar(255)");
                 entity.Property(p => p.VoiceFileName).HasColumnType("varchar(255)");
+                entity.HasOne(p => p.ClonedFrom)
+                    .WithMany(p=>p.Clones)
+                    .HasForeignKey(p=>p.ClonedFromId)
+                    .HasConstraintName("fk_campaign_campaign_clone");
             });
 
             modelBuilder.Entity<CampaignAbonent>(entity =>

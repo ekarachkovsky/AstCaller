@@ -3,14 +3,16 @@ using System;
 using AstCaller.Models.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace AstCaller.Migrations
 {
     [DbContext(typeof(MainContext))]
-    partial class MainContextModelSnapshot : ModelSnapshot
+    [Migration("20200601065726_AddCallAttempts")]
+    partial class AddCallAttempts
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -75,8 +77,6 @@ namespace AstCaller.Migrations
 
                     b.Property<string>("Name")
                         .HasColumnType("varchar(500)");
-
-                    b.Property<int>("Retries");
 
                     b.Property<int>("Status");
 

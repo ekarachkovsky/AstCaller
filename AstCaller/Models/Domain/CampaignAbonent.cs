@@ -25,6 +25,8 @@ namespace AstCaller.Models.Domain
 
         public string CallInfo { get; set; }
 
+        public int CallAttempts { get; set; }
+
         public DateTime? CallStartDate { get; set; }
 
         public IEnumerable<CampaignAbonentHistory> CampaignAbonentHistories { get; set; }

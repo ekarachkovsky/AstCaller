@@ -58,7 +58,7 @@ namespace AstCaller.Controllers
                 return View();
             }
 
-            var stats = await _context.CampaignAbonents.Where(x => x.CampaignId == campaignId && 
+            var stats = await _context.CampaignAbonents.Where(x => x.CampaignId == campaignId &&
                 !_context.CampaignAbonentHistories.Any(h => h.CampaignAbonentId == x.Id && h.Status == 2))
                 .Select(x => new ReportFailedCallsViewModel
                 {
@@ -66,6 +66,27 @@ namespace AstCaller.Controllers
                     Phone = x.Phone,
                     Status = x.CallStatus.StatusName,
                     Attempts = x.CampaignAbonentHistories.Count()
+                }).ToArrayAsync();
+
+            return View(stats);
+        }
+
+        public async Task<IActionResult> CallMe(int campaignId = 0)
+        {
+            ViewBag.Campaigns = await GetCampaigns();
+            ViewBag.CampaignId = campaignId;
+            if (campaignId < 1)
+            {
+                return View();
+            }
+
+            var stats = await _context.CampaignAbonents.Where(x => 
+            _context.CampaignAbonentHistories.Any(h => h.Status == 50 && h.CampaignAbonentId == x.Id)
+            && x.CampaignId==campaignId)
+                .Select(x => new ReportCallMeViewModel
+                {
+                    Id = x.Id,
+                    Phone = x.Phone
                 }).ToArrayAsync();
 
             return View(stats);

@@ -82,6 +82,7 @@ namespace AstCaller.Controllers
                     VoiceFileName = entity.VoiceFileName,
                     Action = entity.Extension,
                     LineLimit = entity.LineLimit,
+                    Retries = entity.Retries,
 
                     Schedules = schedules.Select(x => new CampaignScheduleViewModel
                     {
@@ -102,7 +103,6 @@ namespace AstCaller.Controllers
 
             return View(new CampaignViewModel
             {
-                Action = "Play",
                 Schedules = new CampaignScheduleViewModel[]
                 {
                     new CampaignScheduleViewModel
@@ -114,7 +114,8 @@ namespace AstCaller.Controllers
                         DaysOfWeek = 127
                     }
                 },
-                LineLimit = lineLimit
+                LineLimit = lineLimit,
+                Retries = 3
             });
         }
 
@@ -148,6 +149,11 @@ namespace AstCaller.Controllers
                 {
                     ModelState.AddModelError(nameof(model.Schedules), "Для запуска обзвона необходимо добавить расписание");
                 }
+
+                if (model.Retries < 1)
+                {
+                    ModelState.AddModelError(nameof(model.Retries), "Не указано количество попыток дозвона");
+                }
             }
 
             if (!ModelState.IsValid)
@@ -165,6 +171,7 @@ namespace AstCaller.Controllers
                 entity.Modified = DateTime.Now;
                 entity.ModifierId = _currentUserId ?? 0;
                 entity.Extension = model.Action;
+                entity.Retries = model.Retries;
 
                 if (model.LineLimit > 500)
                 {
@@ -360,18 +367,18 @@ namespace AstCaller.Controllers
 
             var query = _context.Campaigns.Where(x => !x.IsDeleted)
                 .Select(x => new CampaignViewModel
-            {
-                Id = x.Id,
-                AbonentsFileName = x.AbonentsFileName,
-                AbonentsTotal = x.AbonentsCount,
-                Name = x.Name,
-                Status = (CampaignViewModel.CampaignStatuses)x.Status,
-                VoiceFileName = x.VoiceFileName,
-                AbonentsLoaded = abonents.Count(ca => ca.CampaignId == x.Id),
-                AbonentsProcessed = abonents.Count(ca => ca.CampaignId == x.Id && ca.Status != 0),
-                AbonentsAnswered = abonents.Count(ca=>ca.CampaignId == x.Id && ca.Status == 2),
-                Modified = x.Modified
-            });
+                {
+                    Id = x.Id,
+                    AbonentsFileName = x.AbonentsFileName,
+                    AbonentsTotal = x.AbonentsCount,
+                    Name = x.Name,
+                    Status = (CampaignViewModel.CampaignStatuses)x.Status,
+                    VoiceFileName = x.VoiceFileName,
+                    AbonentsLoaded = abonents.Count(ca => ca.CampaignId == x.Id),
+                    AbonentsProcessed = abonents.Count(ca => ca.CampaignId == x.Id && ca.Status != 0),
+                    AbonentsAnswered = abonents.Count(ca => ca.CampaignId == x.Id && ca.Status == 2),
+                    Modified = x.Modified
+                });
             var data = await query
                 .OrderByDescending(x => x.Modified)
                 .Skip(page * 20)
@@ -490,11 +497,11 @@ namespace AstCaller.Controllers
                         Modified = DateTime.Now,
                         ModifierId = _currentUserId.Value,
                         Name = GetCampaignName(campaignEntity.Name),
-                        AbonentsCount = await _context.CampaignAbonents.Where(x=>x.CampaignId==id && !x.HasErrors).CountAsync(),
-                        AsteriskExtension=campaignEntity.AsteriskExtension,
-                        AbonentsFileName=campaignEntity.AbonentsFileName,
+                        //AbonentsCount = await _context.CampaignAbonents.Where(x=>x.CampaignId==id && !x.HasErrors).CountAsync(),
+                        AsteriskExtension = campaignEntity.AsteriskExtension,
+                        AbonentsFileName = campaignEntity.AbonentsFileName,
                         VoiceFileName = campaignEntity.VoiceFileName,
-                        Extension=campaignEntity.Extension,
+                        Extension = campaignEntity.Extension,
                         ClonedFromId = id
                     };
 
@@ -506,27 +513,30 @@ namespace AstCaller.Controllers
                     System.IO.File.Copy(Path.Combine(_uploadsDir, FileType.Voice.ToFileName(id)),
                         Path.Combine(_uploadsDir, FileType.Voice.ToFileName(newCampaign.Id)));
 
-                    var abonents = await _context.CampaignAbonents.Where(x => x.CampaignId == id && !x.HasErrors)
+                    var abonents = await _context.CampaignAbonents.Where(x => x.CampaignId == id && !x.HasErrors && (x.Status == 3 || !x.Status.HasValue || x.Status < 1))
                         .Select(x => new CampaignAbonent
                         {
-                            CampaignId=newCampaign.Id,
-                            ModifierId=_currentUserId.Value,
-                            Modified=DateTime.Now,
-                            Phone=x.Phone,
+                            CampaignId = newCampaign.Id,
+                            ModifierId = _currentUserId.Value,
+                            Modified = DateTime.Now,
+                            Phone = x.Phone,
                             UniqueId = Guid.NewGuid()
                         }).ToArrayAsync();
                     await _context.AddRangeAsync(abonents);
 
+                    newCampaign.AbonentsCount = abonents.Count();
+                    _context.Update(newCampaign);
+
                     var schedules = await _context.CampaignSchedules.Where(x => x.CampaignId == id)
                         .Select(x => new CampaignSchedule
                         {
-                            CampaignId=newCampaign.Id,
-                            DateEnd=x.DateEnd,
-                            DateStart=x.DateStart,
-                            DaysOfWeek=x.DaysOfWeek,
-                            ModifierId=_currentUserId.Value,
-                            TimeEnd=x.TimeEnd,
-                            TimeStart=x.TimeStart
+                            CampaignId = newCampaign.Id,
+                            DateEnd = x.DateEnd,
+                            DateStart = x.DateStart,
+                            DaysOfWeek = x.DaysOfWeek,
+                            ModifierId = _currentUserId.Value,
+                            TimeEnd = x.TimeEnd,
+                            TimeStart = x.TimeStart
                         }).ToArrayAsync();
                     await _context.AddRangeAsync(schedules);
 
@@ -534,7 +544,7 @@ namespace AstCaller.Controllers
 
                     tr.Commit();
 
-                    return Json(new { Success=true });
+                    return Json(new { Success = true });
                 }
                 catch
                 {

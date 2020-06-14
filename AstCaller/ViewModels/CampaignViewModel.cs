@@ -71,5 +71,8 @@ namespace AstCaller.ViewModels
         [Display(Name="Ограничение на количество линий")]
         public int LineLimit { get; set; }
         public int AbonentsAnswered { get; set; }
+        
+        [Display(Name="Кол-во попыток")]
+        public int Retries { get; set; }
     }
 }

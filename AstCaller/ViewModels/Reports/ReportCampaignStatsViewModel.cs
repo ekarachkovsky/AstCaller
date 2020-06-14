@@ -13,5 +13,9 @@
         public int TotalUnansweredCalls { get; set; }
         
         public int TotalAbonentsWithErrors { get; set; }
+
+        public int SentToQueue { get; set; }
+
+        public int AnsweredByOperator { get; set; }
     }
 }

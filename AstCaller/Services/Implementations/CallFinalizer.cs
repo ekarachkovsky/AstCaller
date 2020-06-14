@@ -90,11 +90,11 @@ namespace AstCaller.Services.Implementations
 
         public async Task CleanupAsync()
         {
-            var abonents = _context.CampaignAbonents.Where(x => !x.HasErrors && (x.Status == null || x.Status == 1));
+            var abonents = _context.CampaignAbonents.Where(x => !x.HasErrors);
 
             var finishedCampaigns = await _context.Campaigns
                 .Where(x => (x.Status == (int)CampaignViewModel.CampaignStatuses.Stopped || x.Status == (int)CampaignViewModel.CampaignStatuses.Running)
-                && !abonents.Any(a => a.CampaignId == x.Id))
+                && !abonents.Any(a => a.CampaignId == x.Id && (a.Status == null || a.Status == 1 || (a.Status == 3 && a.CallAttempts < x.Retries))))
                 .Select(x => x.Id).ToArrayAsync();
             if (finishedCampaigns.Length > 0)
             {

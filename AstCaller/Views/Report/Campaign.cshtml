@@ -8,6 +8,7 @@
         <div class="nav flex-column nav-pills">
             <a asp-action="Campaign" class="nav-link active">По Кампаниям</a>
             <a asp-action="FailedCalls" class="nav-link">По необработанным</a>
+            <a asp-action="CallMe" class="nav-link">Перезвонить</a>
         </div>
     </div>
     <div class="col-md-10 report-container">
@@ -62,6 +63,20 @@
                             <td>Всего неотвеченных звонков:</td>
                             <td>@Model.Stats.TotalUnansweredCalls</td>
                         </tr>
+                        @if (Model.Stats.SentToQueue > 0)
+                        {
+                        <tr>
+                            <td>Отправлено в очередь:</td>
+                            <td>@Model.Stats.SentToQueue</td>
+                        </tr>
+                        }
+                        @if (Model.Stats.AnsweredByOperator > 0)
+                        {
+                        <tr>
+                            <td>Всего неотвеченных звонков:</td>
+                            <td>@Model.Stats.AnsweredByOperator</td>
+                        </tr>
+                        }
                     </tbody>
                 </table>
                 <h4>Детальная статистика по обзвону:</h4>

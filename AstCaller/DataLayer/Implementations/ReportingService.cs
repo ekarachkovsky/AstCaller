@@ -62,7 +62,9 @@ namespace AstCaller.DataLayer.Implementations
             count(distinct case when ab.status = 3 then ab.Id end) UnansweredAbonents,
             count(distinct case when ab.status = 1 then ab.Id end) InProcess,
             count(distinct case when h.status = 3 then h.Id end) TotalUnansweredCalls,
-            count(distinct case when ab.haserrors = 1 then ab.Id end) TotalAbonentsWithErrors
+            count(distinct case when ab.haserrors = 1 then ab.Id end) TotalAbonentsWithErrors,
+            count(distinct case when h.status = 101 then ab.Id end) SentToQueue,
+            count(distinct case when h.status = 102 then ab.Id end) AnsweredByOperator
     from campaignabonent ab
     left join campaignabonenthistory h on ab.id=h.campaignabonentid
 where campaignid={campaignId}

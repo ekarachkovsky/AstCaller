@@ -67,7 +67,6 @@ namespace AstCaller.Services.Implementations
             var tempFile = Path.Combine(_configuration.GetValue<string>("Asterisk:TempDir"), fileName);
             await File.WriteAllTextAsync(tempFile,
                 $"Channel: local/{abonent.Phone}@from-internal" + Environment.NewLine +
-                "MaxRetries: 3" + Environment.NewLine +
                 $"Context: {_schedule.Action}" + Environment.NewLine +
                 "Extension: s" + Environment.NewLine +
                 "Priority: 1" + Environment.NewLine +
@@ -102,7 +101,7 @@ namespace AstCaller.Services.Implementations
 
         private async Task FinishCampaignAsync()
         {
-            if(await _context.CampaignAbonents.AnyAsync(x=>x.CampaignId==_schedule.CampaignId && x.Status == 1))
+            if (await _context.CampaignAbonents.AnyAsync(x => x.CampaignId == _schedule.CampaignId && x.Status == 1))
             {
                 return;
             }
@@ -120,8 +119,9 @@ namespace AstCaller.Services.Implementations
         private async Task<IEnumerable<ScheduleTaskAbonentModel>> GetAbonentsAsync(int callsInProcess)
         {
             var abonents = await _context.CampaignAbonents.Where(x => x.CampaignId == _schedule.CampaignId &&
-                    (!x.Status.HasValue || x.Status < 1) &&
+                    (!x.Status.HasValue || x.Status < 1 || (x.Status == 3 && x.CallAttempts < _schedule.Retries)) &&
                     !x.HasErrors)
+                .OrderBy(x => x.CallAttempts)
                 .Select(x => new ScheduleTaskAbonentModel
                 {
                     Id = x.Id,

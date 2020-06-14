@@ -35,6 +35,8 @@ namespace AstCaller.Models.Domain
         public bool IsDeleted { get; set; }
 
         public int? ClonedFromId { get; set; }
+        
+        public int Retries { get; set; }
 
         public Campaign ClonedFrom { get; set; }
         public IEnumerable<Campaign> Clones { get; set; }

@@ -1,26 +1,26 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @inject SignInManager<UserModel> SignInManager
 
-@model IEnumerable<AstCaller.ViewModels.Reports.ReportFailedCallsViewModel>
+@model IEnumerable<AstCaller.ViewModels.Reports.ReportCallMeViewModel>
 
 @{
-    ViewData["Title"] = "По необработанным";
+    ViewData["Title"] = "Перезвонить";
 }
 
 <div class="row">
     <div class="col-md2 d-print-none">
         <div class="nav flex-column nav-pills">
             <a asp-action="Campaign" class="nav-link">По Кампаниям</a>
-            <a asp-action="FailedCalls" class="nav-link active">По необработанным</a>
-            <a asp-action="CallMe" class="nav-link">Перезвонить</a>
+            <a asp-action="FailedCalls" class="nav-link">По необработанным</a>
+            <a asp-action="CallMe" class="nav-link active">Перезвонить</a>
         </div>
     </div>
     <div class="col-md-10 report-container">
         <div class="d-print-none">
-            <form asp-action="FailedCalls" method="get">
+            <form asp-action="CallMe" method="get">
                 <div class="input-group">
                     <div class="input-group-prepend">
-                        <span class="input-group-text">Отчет по неотвеченным звонкам по кампании обзвона</span>
+                        <span class="input-group-text">Список абонентов для перезвона по кампании обзвона</span>
                     </div>
                     <select class="form-control"
                             name="campaignId"
@@ -37,15 +37,11 @@
         @if (ViewBag.CampaignId > 0)
         {
             <div class="d-none d-print-block">
-                <h3 class="text-center">Отчет по неотвеченным звонкам по кампании обзвона</h3>
+                <h3 class="text-center">Список абонентов для перезвона по кампании обзвона</h3>
                 <h4 class="text-center">@((ViewBag.Campaigns as IEnumerable<AstCaller.ViewModels.IdNameViewModel>)?.FirstOrDefault(x => x.Id == (int)ViewBag.CampaignId)?.Name)</h4>
             </div>
             <div class="d-flex flex-row-reverse d-print-none">
                 <button id="printout" class="btn btn-secondary">Распечатать</button>
-                @if (SignInManager.IsSignedIn(User))
-                {
-                    <button id="restartCampaign" class="btn btn-secondary">Перезапустить кампанию</button>
-                }
             </div>
             <div id="reportContainer" class="report-container">
                 <table class="table table-striped">
@@ -53,12 +49,6 @@
                         <tr>
                             <th>
                                 @Html.DisplayNameFor(model => model.Phone)
-                            </th>
-                            <th>
-                                @Html.DisplayNameFor(model => model.Attempts)
-                            </th>
-                            <th>
-                                @Html.DisplayNameFor(model => model.Status)
                             </th>
                             <th></th>
                         </tr>
@@ -69,12 +59,6 @@
                             <tr>
                                 <td>
                                     @Html.DisplayFor(modelItem => item.Phone)
-                                </td>
-                                <td>
-                                    @Html.DisplayFor(modelItem => item.Attempts)
-                                </td>
-                                <td>
-                                    @Html.DisplayFor(modelItem => item.Status)
                                 </td>
                             </tr>
                         }
@@ -93,26 +77,6 @@
 
             btn.click(function () {
                 window.print();
-            });
-        })();
-
-        (function () {
-            var btn = $('#restartCampaign');
-            if (!btn.length)
-                return;
-
-            btn.click(function () {
-                $.post('@Url.Action("Restart","Campaign")',
-                    { id:@ViewBag.CampaignId},
-                    function (result) {
-                        if (confirm('Кампания перезапущена. Перейти на страницу Кампаний?')) {
-                            location.href = '@Url.Action("Index","Campaign")';
-                        }
-                    }).fail(function (ex) {
-                        alert('Не удалось перезапустить кампанию');
-                        console.error(ex);
-                    })
-
             });
         })();
     </script>

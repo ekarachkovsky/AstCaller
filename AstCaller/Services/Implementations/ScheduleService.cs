@@ -40,7 +40,8 @@ namespace AstCaller.Services.Implementations
                       {
                           CampaignId = cmp.Id,
                           LineLimit = cmp.LineLimit,
-                          Action = cmp.Extension
+                          Action = cmp.Extension,
+                          Retries = cmp.Retries
                       };
 
             return await res.Distinct().ToArrayAsync();

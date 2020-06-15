@@ -1,0 +1,54 @@
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "twitter-bootstrap@4.5.0",
+      "destination": "wwwroot/lib/twitter-bootstrap/",
+      "files": [
+        "js/bootstrap.min.js",
+        "js/bootstrap.js",
+        "js/bootstrap.js.map",
+        "js/bootstrap.min.js.map",
+        "css/bootstrap.css.map",
+        "css/bootstrap.css",
+        "css/bootstrap.min.css.map",
+        "css/bootstrap.min.css"
+      ]
+    },
+    {
+      "library": "bootstrap-table@1.16.0",
+      "destination": "wwwroot/lib/bootstrap-table/"
+    },
+    {
+      "library": "bootstrap-datepicker@1.9.0",
+      "destination": "wwwroot/lib/bootstrap-datepicker/"
+    }
+  ,
+{
+  "library": "open-iconic@1.1.1",
+  "destination": "wwwroot/lib/open-iconic/",
+  "files": [
+    "font/fonts/open-iconic.eot",
+    "font/css/open-iconic-bootstrap.min.css",
+    "font/fonts/open-iconic.otf",
+    "font/fonts/open-iconic.svg",
+    "font/fonts/open-iconic.ttf",
+    "font/fonts/open-iconic.woff"
+  ]
+}
+,
+{
+  "library": "jquery@3.5.1",
+  "destination": "wwwroot/lib/jquery/",
+  "files": [
+    "jquery.min.js"
+  ]
+}
+,
+{
+  "library": "jquery-validation-unobtrusive@3.2.11",
+  "destination": "wwwroot/lib/jquery-validation-unobtrusive/"
+}
+]
+}

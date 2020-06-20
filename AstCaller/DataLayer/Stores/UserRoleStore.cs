@@ -8,6 +8,8 @@ namespace AstCaller.DataLayer.Stores
 {
     public class UserRoleStore : IRoleStore<UserRoleModel>
     {
+        private bool _disposed;
+
         public Task<IdentityResult> CreateAsync(UserRoleModel role, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
@@ -16,10 +18,6 @@ namespace AstCaller.DataLayer.Stores
         public Task<IdentityResult> DeleteAsync(UserRoleModel role, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
-        }
-
-        public void Dispose()
-        {
         }
 
         public Task<UserRoleModel> FindByIdAsync(string roleId, CancellationToken cancellationToken)
@@ -60,6 +58,30 @@ namespace AstCaller.DataLayer.Stores
         public Task<IdentityResult> UpdateAsync(UserRoleModel role, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
+                return;
+
+            if (disposing)
+            {
+                // There's nothing to dispose here
+            }
+
+            _disposed = true;
+        }
+
+        ~UserRoleStore()
+        {
+            Dispose(false);
         }
     }
 }

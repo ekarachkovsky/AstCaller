@@ -3,12 +3,13 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
 
 namespace AstCaller
 {
-    public class Program
+    public static class Program
     {
         public static void Main(string[] args)
         {

@@ -12,9 +12,9 @@ namespace AstCaller.Classes
 {
     public class ConfigurationWriter
     {
-        private readonly IHostingEnvironment _environment;
+        private readonly IWebHostEnvironment _environment;
 
-        public ConfigurationWriter(IHostingEnvironment env)
+        public ConfigurationWriter(IWebHostEnvironment env)
         {
             _environment = env;
         }
@@ -40,15 +40,11 @@ namespace AstCaller.Classes
                 token = token[pathItem];
             }
 
-            token[pathElements[pathElements.Length - 1]] = value;
+            token[pathElements[^1]] = value;
 
-            using (StreamWriter file = File.CreateText(fi.PhysicalPath))
-            {
-                using (var writer = new JsonTextWriter(file) { Formatting = Formatting.Indented })
-                {
-                    config.WriteTo(writer);
-                }
-            }
+            using StreamWriter file = File.CreateText(fi.PhysicalPath);
+            using var writer = new JsonTextWriter(file) { Formatting = Formatting.Indented };
+            config.WriteTo(writer);
         }
     }
 }

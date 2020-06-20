@@ -36,21 +36,19 @@ namespace AstCaller.Classes
             {
                 try
                 {
-                    using (var scope = _serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope())
-                    using (var context = scope.ServiceProvider.GetRequiredService<MainContext>())
+                    using var scope = _serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope();
+                    using var context = scope.ServiceProvider.GetRequiredService<MainContext>();
+                    var scheduleService = scope.ServiceProvider.GetRequiredService<IScheduleService>();
+                    var schedules = await scheduleService.GetCurrentSchedulesAsync();
+                    foreach (var schedule in schedules)
                     {
-                        var scheduleService = scope.ServiceProvider.GetRequiredService<IScheduleService>();
-                        var schedules = await scheduleService.GetCurrentSchedulesAsync();
-                        foreach (var schedule in schedules)
-                        {
-                            var service = _serviceFactory.Build(schedule, context);
-                            await service.ExecuteAsync();
-                        }
-
-                        var callFinalizer = scope.ServiceProvider.GetRequiredService<ICallFinalizer>();
-                        //await callFinalizer.ExecuteAsync();
-                        await callFinalizer.CleanupAsync();
+                        var service = _serviceFactory.Build(schedule, context);
+                        await service.ExecuteAsync();
                     }
+
+                    var callFinalizer = scope.ServiceProvider.GetRequiredService<ICallFinalizer>();
+                    //await callFinalizer.ExecuteAsync();
+                    await callFinalizer.CleanupAsync();
                 }
                 catch (Exception ex)
                 {

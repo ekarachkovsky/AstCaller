@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 
 namespace AstCaller
@@ -56,10 +57,11 @@ namespace AstCaller
                 .AddUserStore<UserStore>()
                 .AddRoleStore<UserRoleStore>();
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddMvc(options => options.EnableEndpointRouting = false)
+                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             var supportedCultures = new[] { new CultureInfo("ru-RU") };
             app.UseRequestLocalization(new RequestLocalizationOptions
@@ -72,7 +74,7 @@ namespace AstCaller
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseDatabaseErrorPage();
+                //app.UseDatabaseErrorPage();
             }
             else
             {
@@ -106,6 +108,11 @@ namespace AstCaller
                 routes.MapRoute(
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
+
+                routes.MapRoute(
+                    name: "areas",
+                    template: "{area:exists}/{controller=Home}/{action=Index}/{id?}"
+                );
             });
         }
 
@@ -115,31 +122,27 @@ namespace AstCaller
             {
                 return;
             }
-            using (var serviceScope = app.ApplicationServices
+            using var serviceScope = app.ApplicationServices
             .GetRequiredService<IServiceScopeFactory>()
-            .CreateScope())
+            .CreateScope();
+            using var context = serviceScope.ServiceProvider.GetService<MainContext>();
+            context.Database.Migrate();
+            if (!context.Users.Any())
             {
-                using (var context = serviceScope.ServiceProvider.GetService<MainContext>())
-                {
-                    context.Database.Migrate();
-                    if (!context.Users.Any())
-                    {
-                        var service = new SeedDatabase(context);
-                        service.CreateAdminUser();
-                    }
+                var service = new SeedDatabase(context);
+                service.CreateAdminUser();
+            }
 
-                    if (!context.CallStatuses.Any())
-                    {
-                        var service = new SeedDatabase(context);
-                        service.CreateCallStatuses();
-                    }
+            if (!context.CallStatuses.Any())
+            {
+                var service = new SeedDatabase(context);
+                service.CreateCallStatuses();
+            }
 
-                    if (!context.AsteriskExtensions.Any())
-                    {
-                        var service = new SeedDatabase(context);
-                        service.CreateAsteriskExtensions();
-                    }
-                }
+            if (!context.AsteriskExtensions.Any())
+            {
+                var service = new SeedDatabase(context);
+                service.CreateAsteriskExtensions();
             }
         }
 
@@ -156,7 +159,7 @@ namespace AstCaller
                 .AddTransient<IScheduleService, ScheduleService>()
                 .AddTransient<IScheduledServiceProcessorFactory, ScheduledServiceProcessorFactory>()
                 .AddTransient<ICallFinalizer, CallFinalizer>()
-                .AddTransient<IReportingService,ReportingService>()
+                .AddTransient<IReportingService, ReportingService>()
                 .AddSingleton<Microsoft.Extensions.Hosting.IHostedService, BackgroundWorker>()
                 .AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true));
         }
